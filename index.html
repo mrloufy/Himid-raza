@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hamid Raza | Amazon KDP Expert</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              heading: ['Poppins', 'sans-serif'],
+            },
+            colors: {
+              gray: {
+                850: '#1f1f1f',
+                900: '#1E1E1E', // Reference Dark Bg
+                950: '#121212',
+              },
+              primary: {
+                50: '#fff7ed',
+                100: '#ffedd5',
+                200: '#fed7aa',
+                300: '#fdba74',
+                400: '#fb923c',
+                500: '#FD6F00', // Brand Orange
+                600: '#ea580c',
+                700: '#c2410c',
+                800: '#9a3412',
+                900: '#7c2d12',
+              }
+            },
+            boxShadow: {
+              'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+              'glow': '0 0 20px rgba(253, 111, 0, 0.3)',
+              'premium': '0 20px 50px -12px rgba(0, 0, 0, 0.25)',
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'pulse-soft': 'pulse-soft 3s ease-in-out infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              'pulse-soft': {
+                '0%, 100%': { opacity: 1 },
+                '50%': { opacity: 0.7 },
+              }
+            }
+          }
+        }
+      };
+    </script>
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Animation Classes */
+      .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      
+      .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .stagger-1 { transition-delay: 100ms; }
+      .stagger-2 { transition-delay: 200ms; }
+      .stagger-3 { transition-delay: 300ms; }
+      .stagger-4 { transition-delay: 400ms; }
+
+      /* Custom Hover Smoothness */
+      .hover-lift {
+        transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s ease;
+      }
+      .hover-lift:hover {
+        transform: translateY(-8px);
+      }
+
+      /* --- PREMIUM 3D BOOK HOVER EFFECTS --- */
+      
+      .project-perspective {
+        perspective: 1500px;
+        transform-style: preserve-3d;
+        z-index: 10;
+        position: relative;
+      }
+      
+      .project-card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.6s ease;
+        border-radius: 8px; /* Slightly tighter radius for books */
+        background: white;
+        /* Default subtle shadow */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      /* Hover State (Desktop Only via Tailwind md: prefix usually, but here generally) */
+      @media (min-width: 768px) {
+        .project-perspective:hover .project-card {
+          /* Lift, Rotate Left (revealing right edge), Tilt Back slightly */
+          transform: translateY(-15px) rotateY(-12deg) rotateX(2deg) scale(1.03);
+          /* Deep, realistic shadow that shifts with rotation */
+          box-shadow: -20px 25px 50px -10px rgba(0, 0, 0, 0.4);
+          z-index: 50;
+        }
+        
+        .project-perspective:hover {
+            z-index: 50; /* Bring container forward */
+        }
+      }
+
+      /* Fake Pages / Thickness Effect (Right Side) */
+      .project-card::before {
+        content: '';
+        position: absolute;
+        top: 2px;
+        bottom: 2px;
+        right: -6px; /* Stick out to the right */
+        width: 8px;
+        background: linear-gradient(to right, #e5e5e5, #ffffff);
+        border-radius: 0 2px 2px 0;
+        transform: translateZ(-2px); /* Push slightly behind front face */
+        z-index: -1;
+      }
+
+      /* Gloss/Sheen Effect */
+      .project-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 8px;
+        /* Diagonal light sweep */
+        background: linear-gradient(125deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0) 60%);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        pointer-events: none;
+        z-index: 20;
+      }
+
+      .project-perspective:hover .project-card::after {
+        opacity: 1;
+      }
+
+      /* Range Slider Styling */
+      .skill-track {
+        background-color: #e5e7eb;
+      }
+      .dark .skill-track {
+        background-color: #374151;
+      }
+      .skill-bar {
+        background-color: #FD6F00;
+        height: 100%;
+        border-radius: 9999px;
+        position: relative;
+      }
+
+      /* Hide Scrollbar */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Image Overlay Transition */
+      .img-zoom-parent img {
+        transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .img-zoom-parent:hover img {
+        transform: scale(1.1);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react-easy-crop": "https://esm.sh/react-easy-crop@5.0.0",
+    "tslib": "https://esm.sh/tslib@2.6.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.39.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-white text-gray-900 dark:bg-[#1E1E1E] dark:text-gray-100 transition-colors duration-300">
+    <div id="root"></div>
+    <script>
+      // Simple Intersection Observer for scroll animations
+      document.addEventListener('DOMContentLoaded', () => {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('active');
+            }
+          });
+        }, { threshold: 0.1 });
+
+        const observeElements = () => {
+          document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        };
+
+        observeElements();
+
+        const mutationObserver = new MutationObserver(() => {
+          observeElements();
+        });
+        
+        const root = document.getElementById('root');
+        if (root) {
+          mutationObserver.observe(root, { childList: true, subtree: true });
+        }
+      });
+    </script>
+  </body>
+</html>
