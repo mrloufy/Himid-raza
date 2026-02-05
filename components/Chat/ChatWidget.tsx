@@ -36,8 +36,10 @@ const ChatWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-        const apiKey = process.env.API_KEY;
-        if (!apiKey) {
+        // Safe access to environment variable
+        const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : undefined;
+        
+        if (!apiKey || apiKey === 'undefined' || apiKey === '') {
           throw new Error("API_KEY_MISSING");
         }
 
@@ -91,7 +93,6 @@ const ChatWidget: React.FC = () => {
         setIsLoading(false);
         setIsStreaming(true);
         
-        // Prepare a new message entry for the stream
         setMessages(prev => [...prev, { role: 'model', text: '' }]);
 
         let fullText = '';
@@ -116,11 +117,11 @@ const ChatWidget: React.FC = () => {
         let errorMessage = "I'm having a momentary connection issue. Please try again in a few seconds.";
         
         if (error.message === "API_KEY_MISSING") {
-            errorMessage = "My AI brain is missing its API Key. Please configure the API_KEY environment variable in Vercel.";
+            errorMessage = "I'm currently resting. Please ensure the API_KEY environment variable is configured in the hosting settings to enable chat.";
         } else if (error.message?.includes("429")) {
             errorMessage = "I'm receiving too many requests right now. Please wait a moment.";
         } else if (error.message?.includes("API key not valid")) {
-            errorMessage = "The provided API Key is invalid. Please check your Google AI Studio settings.";
+            errorMessage = "The AI service is temporarily unavailable due to a configuration issue.";
         }
 
         setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
@@ -181,7 +182,7 @@ const ChatWidget: React.FC = () => {
                    `}
                    style={msg.role === 'user' ? { backgroundColor: content.general.brandColor } : {}}
                  >
-                   {msg.text || (isStreaming && idx === messages.length - 1 ? "..." : "")}
+                   {msg.text}
                  </div>
               </div>
            ))}
