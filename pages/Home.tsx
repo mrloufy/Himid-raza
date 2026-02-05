@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import * as Icons from 'lucide-react';
-import { useContent } from '../context/ContentContext';
+import { useContent } from '../context/SiteContext';
 import Header from '../components/Layout/Header';
 import Footer from '../components/Layout/Footer';
 import Button from '../components/UI/Button';

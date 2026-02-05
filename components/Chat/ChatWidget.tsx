@@ -1,7 +1,8 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, Bot, Sparkles } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { useContent } from '../../context/ContentContext';
+import { useContent } from '../../context/SiteContext';
 
 interface Message {
   role: 'user' | 'model';

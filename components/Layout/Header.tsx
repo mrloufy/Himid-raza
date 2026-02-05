@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
-import { useContent } from '../../context/ContentContext';
+import { useContent } from '../../context/SiteContext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Header: React.FC = () => {

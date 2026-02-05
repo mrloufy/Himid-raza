@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useContent } from '../../context/ContentContext';
+import { useContent } from '../../context/SiteContext';
 import { SiteContent, AdminRole, SectionStyle, TypographyStyle } from '../../types';
 import Button from '../UI/Button';
 import { 
@@ -388,6 +388,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   </div>
                )}
 
+               {/* ... (rest of the component remains unchanged) ... */}
                {activeTab === 'typography' && (
                   <div className="space-y-4">
                      <TypographyBlock title="Hero Title (Main)" typoKey="heroTitle" />

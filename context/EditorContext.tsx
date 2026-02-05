@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { useContent } from './ContentContext';
+import { useContent } from './SiteContext';
 import { SiteContent, BuilderElement, BuilderElementType, BuilderStyle } from '../types';
 
 type DeviceMode = 'desktop' | 'tablet' | 'mobile';

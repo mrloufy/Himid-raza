@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { useContent } from '../../context/ContentContext';
+import { useContent } from '../../context/SiteContext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Linkedin } from 'lucide-react';
 

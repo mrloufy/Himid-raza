@@ -8,7 +8,7 @@ import {
   BoxSelect, Image as ImageIcon, Type as TypeIcon, Square, MoreHorizontal,
   Columns, AlignLeft, AlignCenter, AlignRight, Bold, Move
 } from 'lucide-react';
-import { useContent } from '../context/ContentContext';
+import { useContent } from '../context/SiteContext';
 import { useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/Layout/ThemeToggle';
 import { BuilderElementType } from '../types';
