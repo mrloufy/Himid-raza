@@ -8,8 +8,9 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true
   },
-  // Fix for "process is not defined" error in browser
+  // This defines the environment variables that should be available in the browser.
+  // Vite will replace 'process.env.API_KEY' with the actual value during the build.
   define: {
-    'process.env': {}
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
   }
 });

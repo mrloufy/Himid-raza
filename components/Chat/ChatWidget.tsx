@@ -1,6 +1,6 @@
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2, Bot, Sparkles } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { MessageCircle, X, Send, Loader2, Bot, Sparkles, AlertCircle } from 'lucide-react';
 import { useContent } from '../../context/SiteContext';
 
 interface Message {
@@ -16,6 +16,7 @@ const ChatWidget: React.FC = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -24,10 +25,10 @@ const ChatWidget: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isStreaming]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading || isStreaming) return;
 
     const userMessage = inputValue.trim();
     setInputValue('');
@@ -35,40 +36,42 @@ const ChatWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        
-        // Construct system instruction from dynamic content
-        const systemInstruction = `
-            You are an AI assistant for ${content.general.name}, a ${content.general.title}.
-            Your goal is to represent him professionally and answer visitor questions about his Amazon KDP services.
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) {
+          throw new Error("API_KEY_MISSING");
+        }
 
-            --- PROFILE ---
+        const ai = new GoogleGenAI({ apiKey });
+        
+        const systemInstruction = `
+            You are the professional AI assistant for ${content.general.name}, a leading ${content.general.title}.
+            Your objective is to represent Hamid Raza with excellence and assist authors in understanding his publishing workflow.
+
+            --- EXPERT DATA ---
             Name: ${content.general.name}
             Title: ${content.general.title}
-            Description: ${content.general.description}
-            Email: ${content.general.email}
+            Bio: ${content.general.description}
+            Contact: ${content.general.email}
             
-            --- SERVICES ---
+            --- SERVICES OFFERED ---
             ${content.services.map(s => `- ${s.title}: ${s.description}`).join('\n')}
             
-            --- EXPERTISE ---
+            --- AREAS OF MASTERY ---
             ${content.about.expertises.join(', ')}
             
-            --- PORTFOLIO ---
-            ${content.portfolio.map(p => `- ${p.title} (${p.bookType}): ${p.description}`).join('\n')}
+            --- RECENT PORTFOLIO SUCCESSES ---
+            ${content.portfolio.map(p => `- ${p.title} [${p.bookType}]: ${p.description}`).join('\n')}
             
-            --- KDP CATEGORIES ---
+            --- SUPPORTED KDP GENRES ---
             ${content.kdpCategories.map(c => c.title).join(', ')}
 
-            --- INSTRUCTIONS ---
-            1. Be professional, friendly, and concise.
-            2. If asked about pricing or specific quotes, kindly ask them to use the "Contact" form or "Lets Design Together" section on the website.
-            3. You can explain his services (Formatting, Cover Design, KDP Setup, etc.) in detail based on the data provided.
-            4. Do not hallucinate personal details not provided here.
+            --- OPERATIONAL GUIDELINES ---
+            1. Response Tone: Polished, encouraging, and authoritative yet approachable.
+            2. Conciseness: Keep responses under 3-4 sentences unless explaining a complex service.
+            3. Call to Action: For pricing, quotes, or booking, direct them to the "Hire Me" button or the Contact form.
+            4. Accuracy: Only speak about services and projects listed in the expert data above.
         `;
 
-        // Create chat session with history (excluding the initial greeting which is local only)
-        // We filter out the first local greeting for the API history to keep it clean
         const apiHistory = messages.slice(1).map(m => ({
             role: m.role,
             parts: [{ text: m.text }]
@@ -78,23 +81,51 @@ const ChatWidget: React.FC = () => {
             model: 'gemini-3-flash-preview',
             config: {
                 systemInstruction: systemInstruction,
+                temperature: 0.7,
             },
             history: apiHistory
         });
 
-        const result = await chat.sendMessage({ message: userMessage });
-        const responseText = result.text;
+        const result = await chat.sendMessageStream({ message: userMessage });
+        
+        setIsLoading(false);
+        setIsStreaming(true);
+        
+        // Prepare a new message entry for the stream
+        setMessages(prev => [...prev, { role: 'model', text: '' }]);
 
-        setMessages(prev => [...prev, { role: 'model', text: responseText }]);
-
-    } catch (error) {
-        console.error("Chat Error:", error);
-        let errorMessage = "I apologize, but I'm having trouble connecting to the server right now.";
-        if ((error as any).message?.includes("API Key")) {
-            errorMessage = "I'm currently offline (API Configuration Missing). Please contact the site owner.";
+        let fullText = '';
+        for await (const chunk of result) {
+            const chunkText = (chunk as GenerateContentResponse).text || '';
+            fullText += chunkText;
+            
+            setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMsg = newMessages[newMessages.length - 1];
+                if (lastMsg && lastMsg.role === 'model') {
+                    lastMsg.text = fullText;
+                }
+                return newMessages;
+            });
         }
+
+    } catch (error: any) {
+        console.error("Assistant Connection Error:", error);
+        setIsLoading(false);
+        
+        let errorMessage = "I'm having a momentary connection issue. Please try again in a few seconds.";
+        
+        if (error.message === "API_KEY_MISSING") {
+            errorMessage = "My AI brain is missing its API Key. Please configure the API_KEY environment variable in Vercel.";
+        } else if (error.message?.includes("429")) {
+            errorMessage = "I'm receiving too many requests right now. Please wait a moment.";
+        } else if (error.message?.includes("API key not valid")) {
+            errorMessage = "The provided API Key is invalid. Please check your Google AI Studio settings.";
+        }
+
         setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
+        setIsStreaming(false);
         setIsLoading(false);
     }
   };
@@ -111,53 +142,58 @@ const ChatWidget: React.FC = () => {
       {/* Chat Window */}
       <div 
         className={`
-          mb-4 w-[350px] max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300 origin-bottom-right
-          ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none h-0 mb-0'}
+          mb-4 w-[380px] max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-900 rounded-3xl shadow-premium border border-gray-100 dark:border-gray-800 overflow-hidden transition-all duration-500 origin-bottom-right
+          ${isOpen ? 'opacity-100 scale-100 translate-y-0 translate-x-0' : 'opacity-0 scale-90 translate-y-10 translate-x-10 pointer-events-none h-0 mb-0'}
         `}
       >
         {/* Header */}
-        <div className="bg-primary-500 p-4 flex justify-between items-center">
+        <div className="bg-primary-500 p-5 flex justify-between items-center" style={{ backgroundColor: content.general.brandColor }}>
           <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-sm">
-                <Bot size={18} />
+             <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center text-white backdrop-blur-md border border-white/20">
+                <Bot size={22} />
              </div>
              <div>
-                <h3 className="text-white font-bold text-sm">Assistant</h3>
-                <p className="text-primary-100 text-xs flex items-center gap-1">
-                   <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-                   Online
+                <h3 className="text-white font-bold text-sm leading-tight">Hamid's Assistant</h3>
+                <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+                   <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_#4ade80]"></span>
+                   Active Now
                 </p>
              </div>
           </div>
           <button 
             onClick={() => setIsOpen(false)}
-            className="text-white/80 hover:text-white hover:bg-white/10 p-1 rounded-full transition-colors"
+            className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
         {/* Messages Area */}
-        <div className="h-[400px] overflow-y-auto p-4 bg-gray-50 dark:bg-[#121212] space-y-4">
+        <div className="h-[450px] overflow-y-auto p-6 bg-gray-50/50 dark:bg-[#121212] space-y-6 no-scrollbar scroll-smooth">
            {messages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
                  <div 
                    className={`
-                     max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed
+                     max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-soft
                      ${msg.role === 'user' 
                        ? 'bg-primary-500 text-white rounded-br-none' 
-                       : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-bl-none shadow-sm'}
+                       : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700 rounded-bl-none'}
                    `}
+                   style={msg.role === 'user' ? { backgroundColor: content.general.brandColor } : {}}
                  >
-                   {msg.text}
+                   {msg.text || (isStreaming && idx === messages.length - 1 ? "..." : "")}
                  </div>
               </div>
            ))}
            {isLoading && (
-              <div className="flex justify-start">
-                 <div className="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-bl-none border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin text-primary-500" />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Thinking...</span>
+              <div className="flex justify-start animate-fade-in">
+                 <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-bl-none border border-gray-100 dark:border-gray-700 shadow-soft flex items-center gap-3">
+                    <div className="flex gap-1">
+                      <div className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
+                      <div className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Consulting Hamid...</span>
                  </div>
               </div>
            )}
@@ -165,28 +201,35 @@ const ChatWidget: React.FC = () => {
         </div>
 
         {/* Input Area */}
-        <div className="p-3 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
-           <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 border border-transparent focus-within:border-primary-500 focus-within:bg-white dark:focus-within:bg-gray-900 transition-all">
+        <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-50 dark:border-gray-800">
+           <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-2xl px-4 py-3 border border-transparent focus-within:border-primary-500 focus-within:bg-white dark:focus-within:bg-gray-900 transition-all shadow-inner">
               <input 
                 type="text" 
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="Ask about services..."
-                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 dark:text-white placeholder-gray-500"
+                placeholder="Ask about my KDP services..."
+                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 dark:text-white placeholder-gray-400"
+                disabled={isStreaming || isLoading}
               />
               <button 
                 onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isLoading}
-                className="text-primary-500 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled={!inputValue.trim() || isLoading || isStreaming}
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary-500 text-white disabled:opacity-30 disabled:grayscale transition-all hover:scale-105 active:scale-95 shadow-md"
+                style={{ backgroundColor: content.general.brandColor }}
               >
-                 <Send size={18} />
+                 {isLoading || isStreaming ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
               </button>
            </div>
-           <div className="text-center mt-2">
-              <p className="text-[10px] text-gray-400 flex items-center justify-center gap-1">
-                 Powered by <Sparkles size={8}/> Gemini
+           <div className="flex items-center justify-between mt-3 px-2">
+              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                 <Sparkles size={10} className="text-primary-500"/> AI Assisted Agent
               </p>
+              <div className="flex gap-2">
+                 <div className="w-1 h-1 rounded-full bg-gray-200"></div>
+                 <div className="w-1 h-1 rounded-full bg-gray-200"></div>
+                 <div className="w-1 h-1 rounded-full bg-gray-200"></div>
+              </div>
            </div>
         </div>
       </div>
@@ -195,11 +238,16 @@ const ChatWidget: React.FC = () => {
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95
-          ${isOpen ? 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-white rotate-90' : 'bg-primary-500 text-white animate-bounce-slow'}
+          w-16 h-16 rounded-3xl shadow-premium flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-90 relative group
+          ${isOpen ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 rotate-90 rounded-[2rem]' : 'bg-primary-500 text-white'}
         `}
+        style={!isOpen ? { backgroundColor: content.general.brandColor } : {}}
       >
-        {isOpen ? <X size={24} /> : <MessageCircle size={28} />}
+        <div className="absolute inset-0 rounded-3xl bg-primary-500 blur-xl opacity-0 group-hover:opacity-40 transition-opacity" style={{ backgroundColor: content.general.brandColor }}></div>
+        {isOpen ? <X size={28} /> : <MessageCircle size={32} />}
+        {!isOpen && (
+           <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 border-4 border-white dark:border-[#1E1E1E] rounded-full animate-bounce"></div>
+        )}
       </button>
     </div>
   );
