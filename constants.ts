@@ -1,3 +1,4 @@
+
 import { SiteContent } from './types';
 
 const defaultSectionStyle = {
@@ -100,11 +101,28 @@ export const INITIAL_CONTENT: SiteContent = {
     { id: 'cat1', title: "Literature and Fiction", description: "Classic and contemporary fiction formatting and layout.", imageUrl: "https://images.unsplash.com/photo-1474932430478-367dbb6832c1?auto=format&fit=crop&q=80&w=800" },
     { id: 'cat2', title: "Children’s Books", description: "Colorful layouts, age-appropriate typography, and illustration handling.", imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=800" },
     { id: 'cat3', title: "Romance", description: "Captivating designs and formatting for love stories.", imageUrl: "https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?auto=format&fit=crop&q=80&w=800" },
-    { id: 'cat4', title: "Self Help", description: "Clean and motivational layouts for non-fiction.", imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800" }
+    { id: 'cat4', title: "Self Help", description: "Clean and motivational layouts for non-fiction.", imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat5', title: "Mystery & Thriller", description: "Gripping layouts for edge-of-your-seat suspense.", imageUrl: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat6', title: "Sci-Fi & Fantasy", description: "World-building formatting for epic adventures.", imageUrl: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat7', title: "Biographies", description: "Personal histories presented with professional elegance.", imageUrl: "https://images.unsplash.com/photo-1544648151-1820bccdc05e?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat8', title: "Business & Money", description: "Clean, authoritative layouts for financial success.", imageUrl: "https://images.unsplash.com/photo-1454165833767-0230cf6b297a?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat9', title: "Cookbooks", description: "Recipe layouts that are as beautiful as they are practical.", imageUrl: "https://images.unsplash.com/photo-1505935428862-770b6f24f629?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat10', title: "Health & Fitness", description: "Dynamic formatting for wellness and exercise guides.", imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat11', title: "History", description: "Scholarly and engaging layouts for historical accounts.", imageUrl: "https://images.unsplash.com/photo-1461360228754-6e81c478c882?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat12', title: "Horror", description: "Atmospheric designs for chilling tales.", imageUrl: "https://images.unsplash.com/photo-1509248961158-e54f6934749c?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat13', title: "Poetry", description: "Delicate typography for verses and stanzas.", imageUrl: "https://images.unsplash.com/photo-1495195134817-aeb325a55b65?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat14', title: "Religion", description: "Respectful and clear formatting for spiritual works.", imageUrl: "https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat15', title: "Science & Tech", description: "Precise layouts for technical and scientific data.", imageUrl: "https://images.unsplash.com/photo-1518152006812-edab29b069ac?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat16', title: "Travel", description: "Image-rich formatting for guides and memoirs.", imageUrl: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat17', title: "Teen & YA", description: "Modern, engaging designs for younger audiences.", imageUrl: "https://images.unsplash.com/photo-1521106047354-5a5b85e819ee?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat18', title: "Educational", description: "Clear structures for textbooks and workbooks.", imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat19', title: "Comics", description: "Panel-perfect formatting for graphic storytelling.", imageUrl: "https://images.unsplash.com/photo-1588497859490-85d1c17db96d?auto=format&fit=crop&q=80&w=800" },
+    { id: 'cat20', title: "Coloring Books", description: "High-quality line art preparation for print.", imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&q=80&w=800" }
   ],
   portfolio: [
     { id: '1', title: "The Silent Ocean", bookType: "Paperback & eBook", category: "Literature and Fiction", description: "Complete formatting and launch support for a mystery novel.", imageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800" },
-    { id: '2', title: "Path to Wellness", bookType: "Paperback", category: "Self Help", description: "Professional interior formatting and Amazon publishing strategy.", imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=800" }
+    { id: '2', title: "Path to Wellness", bookType: "Paperback", category: "Self Help", description: "Professional interior formatting and Amazon publishing strategy.", imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=800" },
+    { id: '3', title: "Heart of Eternity", bookType: "Paperback & eBook", category: "Romance", description: "Beautiful romance novel interior and Kindle conversion.", imageUrl: "https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?auto=format&fit=crop&q=80&w=800" }
   ],
   promotions: [
     { id: 'p1', title: "New Author Bundle", description: "Get 20% off when you book formatting and cover design together.", imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=800" }

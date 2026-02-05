@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
-import { Upload, X, Check, Scissors, AlertCircle, Loader2, Info } from 'lucide-react';
+import { Upload, X, Scissors, AlertCircle, Loader2, Info, Trash2 } from 'lucide-react';
 import Button from '../UI/Button';
 
 interface ImageUploaderProps {
@@ -10,8 +10,6 @@ interface ImageUploaderProps {
   label?: string;
   aspect?: number;
 }
-
-// --- UTILITY FUNCTIONS FOR IMAGE PROCESSING ---
 
 const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
@@ -33,14 +31,12 @@ async function getCroppedImg(
 
   if (!ctx) return null;
 
-  // Set canvas size to match the bounding box exactly
   canvas.width = pixelCrop.width;
   canvas.height = pixelCrop.height;
-
-  // Clear canvas
+  
+  // Ensure the canvas is transparent before drawing
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw the cropped image
+  
   ctx.drawImage(
     image,
     pixelCrop.x,
@@ -53,21 +49,21 @@ async function getCroppedImg(
     pixelCrop.height
   );
 
+  // Preserve transparency if the original was PNG or WebP
   const outputType = (mimeType === 'image/png' || mimeType === 'image/webp') ? mimeType : 'image/jpeg';
-  const quality = outputType === 'image/jpeg' ? 0.85 : undefined;
+  
+  // Quality only applies to JPEG/WebP. PNG is lossless.
+  const quality = outputType === 'image/jpeg' ? 0.6 : 0.8;
 
-  // Standardize to max 1200px height for 2:3 ratio (approx 800x1200)
-  const MAX_HEIGHT = 1200;
+  const MAX_HEIGHT = 800; 
   if (canvas.height > MAX_HEIGHT) {
     const scale = MAX_HEIGHT / canvas.height;
     const newHeight = MAX_HEIGHT;
     const newWidth = canvas.width * scale;
-
     const resizedCanvas = document.createElement('canvas');
     resizedCanvas.width = newWidth;
     resizedCanvas.height = newHeight;
     const resizedCtx = resizedCanvas.getContext('2d');
-
     if (resizedCtx) {
       resizedCtx.clearRect(0, 0, newWidth, newHeight);
       resizedCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
@@ -91,21 +87,26 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      
-      if (file.size > 10 * 1024 * 1024) { // Increased limit for high res covers
+      if (file.size > 10 * 1024 * 1024) {
         setError("File too large. Max 10MB allowed.");
         return;
       }
-      
       setError(null);
       setMimeType(file.type);
-      
       const reader = new FileReader();
       reader.addEventListener('load', () => {
         setImageSrc(reader.result?.toString() || '');
         setIsCropping(true);
       });
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleClearImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.confirm("Remove this image?")) {
+      onImageChange("");
     }
   };
 
@@ -145,42 +146,50 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
           {currentImage ? (
             <>
               <img src={currentImage} className="w-full h-full object-cover opacity-90 group-hover:opacity-40 transition-opacity" alt="Preview" />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                  <div className="bg-white dark:bg-gray-900 rounded-full p-3 shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
                     <Upload className="text-primary-500" size={24}/>
                  </div>
               </div>
+              <button 
+                type="button"
+                onClick={handleClearImage}
+                className="absolute bottom-2 right-2 p-2 bg-red-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-auto"
+                title="Remove Image"
+              >
+                <Trash2 size={16} />
+              </button>
             </>
           ) : (
             <div className="flex flex-col items-center gap-3 text-gray-400">
               <Upload size={32} className="opacity-50"/>
               <div className="text-center">
                 <span className="text-[10px] font-black uppercase tracking-wider block">Upload Vertical Image</span>
-                <span className="text-[9px] font-bold text-gray-500">2:3 aspect ratio required</span>
+                <span className="text-[9px] font-bold text-gray-500">Supports transparency (PNG)</span>
               </div>
             </div>
           )}
-          <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={onFileChange} title="Change Image" />
+          <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-10" accept="image/*" onChange={onFileChange} title="Change Image" />
         </div>
         
         {error && <p className="text-[10px] text-red-500 font-bold flex items-center gap-1"><AlertCircle size={10}/> {error}</p>}
         
         {!currentImage && !error && (
-            <p className="text-[9px] text-gray-400 flex items-center gap-1 italic"><Info size={10}/> Book covers look best in 2:3 vertical format.</p>
+            <p className="text-[9px] text-gray-400 flex items-center gap-1 italic"><Info size={10}/> Transparent PNGs are supported for logos and graphics.</p>
         )}
       </div>
 
       {isCropping && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 md:p-8 backdrop-blur-md">
-           <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl animate-fade-in border border-gray-100 dark:border-gray-800">
+           <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800">
               <div className="p-8 flex justify-between items-center border-b dark:border-gray-800">
                  <div>
                     <h3 className="font-bold flex items-center gap-2 dark:text-white text-xl">
-                      <Scissors size={20} className="text-primary-500"/> Adjust Book Cover
+                      <Scissors size={20} className="text-primary-500"/> Adjust Image
                     </h3>
-                    <p className="text-xs text-gray-500 mt-1">Locked to 2:3 vertical aspect ratio for best display.</p>
+                    <p className="text-xs text-gray-500 mt-1">Transparency will be preserved for PNG files.</p>
                  </div>
-                 <button onClick={() => { setIsCropping(false); setImageSrc(null); }} className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X size={24}/></button>
+                 <button type="button" onClick={() => { setIsCropping(false); setImageSrc(null); }} className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X size={24}/></button>
               </div>
               <div className="relative h-[400px] md:h-[500px] w-full bg-[#0a0a0a]">
                  <Cropper 
@@ -211,9 +220,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
                     />
                  </div>
                  <div className="flex gap-4">
-                    <Button variant="outline" onClick={() => { setIsCropping(false); setImageSrc(null); }} className="flex-1 py-5 rounded-2xl font-bold">Cancel</Button>
-                    <Button onClick={showCroppedImage} className="flex-[2] py-5 rounded-2xl font-bold shadow-glow" disabled={isProcessing}>
-                        {isProcessing ? <><Loader2 size={20} className="animate-spin mr-2"/> Finalizing...</> : 'Apply Professional Crop'}
+                    <Button type="button" variant="outline" onClick={() => { setIsCropping(false); setImageSrc(null); }} className="flex-1 py-5 rounded-2xl font-bold">Cancel</Button>
+                    <Button type="button" onClick={showCroppedImage} className="flex-[2] py-5 rounded-2xl font-bold shadow-glow" disabled={isProcessing}>
+                        {isProcessing ? <><Loader2 size={20} className="animate-spin mr-2"/> Processing...</> : 'Save Professional Crop'}
                     </Button>
                  </div>
               </div>

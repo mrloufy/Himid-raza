@@ -5,11 +5,10 @@ import { useContent } from '../../context/ContentContext';
 import { SiteContent, AdminRole, SectionStyle, TypographyStyle } from '../../types';
 import Button from '../UI/Button';
 import { 
-  LogOut, Save, Plus, Trash2, BookOpen, User, Briefcase, MessageSquare, 
+  LogOut, Plus, Trash2, BookOpen, User, Briefcase, MessageSquare, 
   Settings, Menu, X, Type, RotateCcw, Layout, ShieldCheck, 
-  History, AlertTriangle, CheckCircle2, ArrowLeft,
-  GripVertical, Loader2, Megaphone, Layers, Image as ImageIcon,
-  Wand2
+  History, ArrowLeft, GripVertical, Loader2, Megaphone, Layers, 
+  Wand2, Eye, EyeOff, Mail, Phone, Share2
 } from 'lucide-react';
 import ImageUploader from './ImageUploader';
 
@@ -165,19 +164,32 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     setLocalContent(prev => {
       const current = JSON.parse(JSON.stringify(prev)) as any;
       if (section === 'services') {
-        current.services.push({ id, title: 'New Service', description: 'Description', iconName: 'Settings' });
+        current.services.push({ id, title: 'New Service', description: 'Description', iconName: 'Settings', isHidden: false });
       } else if (section === 'portfolio') {
-        current.portfolio.push({ id, title: 'New Project', bookType: 'Paperback', description: 'Description', imageUrl: '', category: 'General' });
+        current.portfolio.push({ id, title: 'New Project', bookType: 'Paperback', description: 'Description', imageUrl: '', category: 'General', isHidden: false });
       } else if (section === 'testimonials') {
-        current.testimonials.push({ id, clientName: 'New Client', content: 'Feedback', role: 'Author', avatarUrl: '' });
+        current.testimonials.push({ id, clientName: 'New Client', content: 'Feedback', role: 'Author', avatarUrl: '', isHidden: false });
       } else if (section === 'kdpCategories') {
-        current.kdpCategories.push({ id, title: 'New Category', description: 'Description', imageUrl: '' });
+        current.kdpCategories.push({ id, title: 'New Category', description: 'Description', imageUrl: '', isHidden: false });
       } else if (section === 'promotions') {
-        current.promotions.push({ id, title: 'New Promotion', description: 'Description', imageUrl: '' });
+        current.promotions.push({ id, title: 'New Promotion', description: 'Description', imageUrl: '', isHidden: false });
       } else if (section === 'header_menu') {
         current.header.menuItems.push({ id, label: 'New Link', href: '#' });
       } else if (section === 'about_expertises') {
         current.about.expertises.push('New Skill');
+      }
+      return current;
+    });
+  };
+
+  const toggleHideItem = (section: string, id: string) => {
+    if (isReadOnly) return;
+    setLocalContent(prev => {
+      const current = JSON.parse(JSON.stringify(prev)) as any;
+      const list = current[section] as any[];
+      const index = list.findIndex(item => String(item.id) === String(id));
+      if (index !== -1) {
+        list[index].isHidden = !list[index].isHidden;
       }
       return current;
     });
@@ -342,13 +354,36 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                         <ImageUploader currentImage={localContent.general.heroImage} onImageChange={(url) => setLocalContent(prev => ({...prev, general: {...prev.general, heroImage: url}}))} label="Main Hero Image" aspect={16/9} />
                         <ImageUploader currentImage={localContent.general.aboutImage} onImageChange={(url) => setLocalContent(prev => ({...prev, general: {...prev.general, aboutImage: url}}))} label="About Me Portrait" aspect={2/3} />
                      </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t dark:border-gray-800">
-                        <div><label className="label">Display Name</label><input name="name" value={localContent.general.name || ''} onChange={handleGeneralChange} className="input-field" disabled={isReadOnly} /></div>
-                        <div><label className="label">Professional Title</label><input name="title" value={localContent.general.title || ''} onChange={handleGeneralChange} className="input-field" disabled={isReadOnly} /></div>
-                        <div><label className="label">Primary Color</label><input type="color" name="brandColor" value={localContent.general.brandColor || '#FD6F00'} onChange={handleGeneralChange} className="w-full h-11 p-1 bg-transparent border dark:border-gray-700 rounded-lg" disabled={isReadOnly} /></div>
-                        <div><label className="label">Greeting Text</label><input name="heroGreeting" value={localContent.general.heroGreeting || ''} onChange={handleGeneralChange} className="input-field" disabled={isReadOnly} /></div>
-                        <div className="md:col-span-2"><label className="label">Short Intro Bio</label><textarea name="description" value={localContent.general.description || ''} onChange={handleGeneralChange} className="input-field h-32 leading-relaxed" disabled={isReadOnly} /></div>
-                        <div><label className="label">Button Roundness</label><select name="buttonStyle" value={localContent.general.buttonStyle} onChange={handleGeneralChange} className="input-field" disabled={isReadOnly}><option value="rounded">Rounded Corners</option><option value="pill">Full Pill Shape</option><option value="square">Sharp Square</option></select></div>
+                     <div className="pt-10 border-t dark:border-gray-800 space-y-10">
+                        {/* Branding */}
+                        <section>
+                           <h3 className="font-bold text-lg dark:text-white mb-6 flex items-center gap-2"><Layout size={18} className="text-gray-400"/> General Branding</h3>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              <div><label className="label">Display Name</label><input name="name" value={localContent.general.name || ''} onChange={handleGeneralChange} className="input-field" disabled={isReadOnly} /></div>
+                              <div><label className="label">Professional Title</label><input name="title" value={localContent.general.title || ''} onChange={handleGeneralChange} className="input-field" disabled={isReadOnly} /></div>
+                              <div><label className="label">Primary Color</label><input type="color" name="brandColor" value={localContent.general.brandColor || '#FD6F00'} onChange={handleGeneralChange} className="w-full h-11 p-1 bg-transparent border dark:border-gray-700 rounded-lg" disabled={isReadOnly} /></div>
+                              <div><label className="label">Button Roundness</label><select name="buttonStyle" value={localContent.general.buttonStyle} onChange={handleGeneralChange} className="input-field" disabled={isReadOnly}><option value="rounded">Rounded Corners</option><option value="pill">Full Pill Shape</option><option value="square">Sharp Square</option></select></div>
+                              <div className="md:col-span-2"><label className="label">Short Intro Bio</label><textarea name="description" value={localContent.general.description || ''} onChange={handleGeneralChange} className="input-field h-32 leading-relaxed" disabled={isReadOnly} /></div>
+                           </div>
+                        </section>
+
+                        {/* Contact Info */}
+                        <section className="pt-10 border-t dark:border-gray-800">
+                           <h3 className="font-bold text-lg dark:text-white mb-6 flex items-center gap-2"><Mail size={18} className="text-gray-400"/> Contact Information</h3>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              <div><label className="label">Public Email Address</label><div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16}/><input name="email" value={localContent.general.email || ''} onChange={handleGeneralChange} className="input-field pl-12" placeholder="your@email.com" disabled={isReadOnly} /></div></div>
+                              <div><label className="label">Phone Number</label><div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16}/><input name="phone" value={localContent.general.phone || ''} onChange={handleGeneralChange} className="input-field pl-12" placeholder="+1 (234) 567-890" disabled={isReadOnly} /></div></div>
+                           </div>
+                        </section>
+
+                        {/* Social Links */}
+                        <section className="pt-10 border-t dark:border-gray-800">
+                           <h3 className="font-bold text-lg dark:text-white mb-6 flex items-center gap-2"><Share2 size={18} className="text-gray-400"/> Social Profiles</h3>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              <div><label className="label">LinkedIn Profile URL</label><input name="linkedin" value={localContent.general.linkedin || ''} onChange={handleGeneralChange} className="input-field" placeholder="https://linkedin.com/in/username" disabled={isReadOnly} /></div>
+                              <div><label className="label">Fiverr Profile URL</label><input name="fiverr" value={localContent.general.fiverr || ''} onChange={handleGeneralChange} className="input-field" placeholder="https://fiverr.com/username" disabled={isReadOnly} /></div>
+                           </div>
+                        </section>
                      </div>
                   </div>
                )}
@@ -364,7 +399,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
                {activeTab === 'header' && (
                   <div className="space-y-10">
-                     <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg dark:text-white tracking-tight">Header Navigation Items</h3><Button onClick={() => addItem('header_menu')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Link</Button></div>
+                     <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg dark:text-white tracking-tight">Header Navigation Items</h3><Button type="button" onClick={() => addItem('header_menu')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Link</Button></div>
                      <div className="space-y-3">
                         {localContent.header.menuItems.map((item, idx) => (
                            <div key={item.id} className="p-5 border dark:border-gray-800 rounded-2xl flex items-center gap-4 bg-gray-50/50 dark:bg-gray-800/30 group hover:border-primary-300 transition-colors relative">
@@ -373,7 +408,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                                 <input value={item.label} onChange={(e) => { const list = [...localContent.header.menuItems]; list[idx].label = e.target.value; setLocalContent(prev => ({...prev, header: {...prev.header, menuItems: list}})); }} className="input-field" placeholder="Link Text" disabled={isReadOnly} />
                                 <input value={item.href} onChange={(e) => { const list = [...localContent.header.menuItems]; list[idx].href = e.target.value; setLocalContent(prev => ({...prev, header: {...prev.header, menuItems: list}})); }} className="input-field" placeholder="URL Target (#anchor)" disabled={isReadOnly} />
                               </div>
-                              <button onClick={(e) => { e.stopPropagation(); removeItem('header_menu', item.id); }} className="p-3 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all" disabled={!canDelete}><Trash2 size={18}/></button>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); removeItem('header_menu', item.id); }} className="p-3 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all z-[60]" disabled={!canDelete}><Trash2 size={18}/></button>
                            </div>
                         ))}
                      </div>
@@ -384,11 +419,15 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   <div className="space-y-10">
                      <SectionSettingsEditor sectionKey="services" localContent={localContent} isReadOnly={isReadOnly} onSectionStyleChange={handleSectionStyleChange} />
                      <SectionHeaderEditor sectionKey="services" localContent={localContent} isReadOnly={isReadOnly} onHeaderChange={handleHeaderChange} />
-                     <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg dark:text-white">Active Service Offerings</h3><Button onClick={() => addItem('services')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Service</Button></div>
+                     <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg dark:text-white">Active Service Offerings</h3><Button type="button" onClick={() => addItem('services')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Service</Button></div>
                      <div className="grid gap-6">
                         {localContent.services.map((item) => (
-                           <div key={item.id} className="p-8 border dark:border-gray-800 rounded-[2rem] bg-gray-50/30 dark:bg-gray-800/20 relative group">
-                              <button onClick={(e) => { e.stopPropagation(); removeItem('services', item.id); }} className="absolute top-6 right-6 p-3 text-red-500 hover:text-red-700 transition-all opacity-100 bg-white/50 dark:bg-gray-800/50 rounded-xl z-50 cursor-pointer pointer-events-auto" disabled={!canDelete} title="Delete Service"><Trash2 size={20}/></button>
+                           <div key={item.id} className={`p-8 border dark:border-gray-800 rounded-[2rem] bg-gray-50/30 dark:bg-gray-800/20 relative group ${item.isHidden ? 'opacity-50' : ''}`}>
+                              <div className="absolute top-6 right-6 flex gap-2 z-[60]">
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); toggleHideItem('services', item.id); }} className="p-3 text-gray-500 hover:text-primary-500 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto border dark:border-gray-700 shadow-md" disabled={isReadOnly} title={item.isHidden ? "Show Service" : "Hide Service"}>{item.isHidden ? <EyeOff size={20}/> : <Eye size={20}/>}</button>
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); removeItem('services', item.id); }} className="p-3 text-red-500 hover:text-red-700 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto border dark:border-gray-700 shadow-md" disabled={!canDelete} title="Delete Service"><Trash2 size={20}/></button>
+                              </div>
+                              {item.isHidden && <span className="absolute top-6 left-6 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-widest">Hidden</span>}
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                  <div><label className="label">Service Name</label><input value={item.title} onChange={(e) => updateItemField('services', item.id, 'title', e.target.value)} className="input-field" disabled={isReadOnly} /></div>
                                  <div><label className="label">Icon Name (Lucide)</label><input value={item.iconName} onChange={(e) => updateItemField('services', item.id, 'iconName', e.target.value)} className="input-field" placeholder="Briefcase, Settings, etc." disabled={isReadOnly} /></div>
@@ -406,12 +445,16 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                      <SectionHeaderEditor sectionKey="portfolio" localContent={localContent} isReadOnly={isReadOnly} onHeaderChange={handleHeaderChange} />
                      <div className="flex justify-between items-center mb-6">
                         <div><h3 className="font-bold text-lg dark:text-white">Project Case Studies</h3><p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Vertical image (2:3 ratio required)</p></div>
-                        <Button onClick={() => addItem('portfolio')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Project</Button>
+                        <Button type="button" onClick={() => addItem('portfolio')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Project</Button>
                      </div>
                      <div className="grid gap-8">
                         {localContent.portfolio.map((item) => (
-                           <div key={item.id} className="p-8 border dark:border-gray-800 rounded-[2.5rem] bg-gray-50/30 dark:bg-gray-800/20 relative group">
-                              <button onClick={(e) => { e.stopPropagation(); removeItem('portfolio', item.id); }} className="absolute top-6 right-6 p-3 text-red-500 hover:text-red-700 transition-all opacity-100 bg-white/50 dark:bg-gray-800/50 rounded-xl z-50 cursor-pointer pointer-events-auto shadow-sm" disabled={!canDelete} title="Delete Project"><Trash2 size={20}/></button>
+                           <div key={item.id} className={`p-8 border dark:border-gray-800 rounded-[2.5rem] bg-gray-50/30 dark:bg-gray-800/20 relative group ${item.isHidden ? 'opacity-50' : ''}`}>
+                              <div className="absolute top-6 right-6 flex gap-2 z-[60]">
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); toggleHideItem('portfolio', item.id); }} className="p-3 text-gray-500 hover:text-primary-500 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto shadow-md border dark:border-gray-700" disabled={isReadOnly} title={item.isHidden ? "Show Project" : "Hide Project"}>{item.isHidden ? <EyeOff size={20}/> : <Eye size={20}/>}</button>
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); removeItem('portfolio', item.id); }} className="p-3 text-red-500 hover:text-red-700 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto shadow-md border dark:border-gray-700" disabled={!canDelete} title="Delete Project"><Trash2 size={20}/></button>
+                              </div>
+                              {item.isHidden && <span className="absolute top-6 left-6 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-widest">Hidden</span>}
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                                  <ImageUploader currentImage={item.imageUrl} onImageChange={(url) => updateItemField('portfolio', item.id, 'imageUrl', url)} label="Vertical image (2:3 ratio required)" aspect={2/3} />
                                  <div className="md:col-span-2 space-y-6">
@@ -435,12 +478,16 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                      <SectionHeaderEditor sectionKey="kdpCategories" localContent={localContent} isReadOnly={isReadOnly} onHeaderChange={handleHeaderChange} />
                      <div className="flex justify-between items-center mb-6">
                         <div><h3 className="font-bold text-lg dark:text-white">Genre Specialties</h3><p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Vertical image (2:3 ratio required)</p></div>
-                        <Button onClick={() => addItem('kdpCategories')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Category</Button>
+                        <Button type="button" onClick={() => addItem('kdpCategories')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Category</Button>
                      </div>
                      <div className="grid gap-6">
                         {localContent.kdpCategories.map((item) => (
-                           <div key={item.id} className="p-8 border dark:border-gray-800 rounded-[2rem] bg-gray-50/30 dark:bg-gray-800/20 relative group">
-                              <button onClick={(e) => { e.stopPropagation(); removeItem('kdpCategories', item.id); }} className="absolute top-6 right-6 p-3 text-red-500 hover:text-red-700 transition-all opacity-100 bg-white/50 dark:bg-gray-800/50 rounded-xl z-50 cursor-pointer pointer-events-auto" disabled={!canDelete} title="Delete Category"><Trash2 size={20}/></button>
+                           <div key={item.id} className={`p-8 border dark:border-gray-800 rounded-[2rem] bg-gray-50/30 dark:bg-gray-800/20 relative group ${item.isHidden ? 'opacity-50' : ''}`}>
+                              <div className="absolute top-6 right-6 flex gap-2 z-[60]">
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); toggleHideItem('kdpCategories', item.id); }} className="p-3 text-gray-500 hover:text-primary-500 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto border dark:border-gray-700 shadow-md" disabled={isReadOnly} title={item.isHidden ? "Show Category" : "Hide Category"}>{item.isHidden ? <EyeOff size={20}/> : <Eye size={20}/>}</button>
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); removeItem('kdpCategories', item.id); }} className="p-3 text-red-500 hover:text-red-700 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto border dark:border-gray-700 shadow-md" disabled={!canDelete} title="Delete Category"><Trash2 size={20}/></button>
+                              </div>
+                              {item.isHidden && <span className="absolute top-6 left-6 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-widest">Hidden</span>}
                               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                                  <div className="md:col-span-1"><ImageUploader currentImage={item.imageUrl} onImageChange={(url) => updateItemField('kdpCategories', item.id, 'imageUrl', url)} label="Vertical image (2:3 ratio required)" aspect={2/3} /></div>
                                  <div className="md:col-span-3 space-y-6">
@@ -458,11 +505,15 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   <div className="space-y-10">
                      <SectionSettingsEditor sectionKey="promotions" localContent={localContent} isReadOnly={isReadOnly} onSectionStyleChange={handleSectionStyleChange} />
                      <SectionHeaderEditor sectionKey="promotions" localContent={localContent} isReadOnly={isReadOnly} onHeaderChange={handleHeaderChange} />
-                     <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg dark:text-white">Active Promotional Deals</h3><Button onClick={() => addItem('promotions')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Promotion</Button></div>
+                     <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg dark:text-white">Active Promotional Deals</h3><Button type="button" onClick={() => addItem('promotions')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Promotion</Button></div>
                      <div className="grid gap-8">
                         {localContent.promotions.map((item) => (
-                           <div key={item.id} className="p-8 border dark:border-gray-800 rounded-[2rem] bg-gray-50/30 dark:bg-gray-800/20 relative group">
-                              <button onClick={(e) => { e.stopPropagation(); removeItem('promotions', item.id); }} className="absolute top-6 right-6 p-3 text-red-500 hover:text-red-700 transition-all opacity-100 bg-white/50 dark:bg-gray-800/50 rounded-xl z-50 cursor-pointer pointer-events-auto" disabled={!canDelete} title="Delete Promotion"><Trash2 size={20}/></button>
+                           <div key={item.id} className={`p-8 border dark:border-gray-800 rounded-[2rem] bg-gray-50/30 dark:bg-gray-800/20 relative group ${item.isHidden ? 'opacity-50' : ''}`}>
+                              <div className="absolute top-6 right-6 flex gap-2 z-[60]">
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); toggleHideItem('promotions', item.id); }} className="p-3 text-gray-500 hover:text-primary-500 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto border dark:border-gray-700 shadow-md" disabled={isReadOnly} title={item.isHidden ? "Show Promotion" : "Hide Promotion"}>{item.isHidden ? <EyeOff size={20}/> : <Eye size={20}/>}</button>
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); removeItem('promotions', item.id); }} className="p-3 text-red-500 hover:text-red-700 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto border dark:border-gray-700 shadow-md" disabled={!canDelete} title="Delete Promotion"><Trash2 size={20}/></button>
+                              </div>
+                              {item.isHidden && <span className="absolute top-6 left-6 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-widest">Hidden</span>}
                               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                                  <div className="md:col-span-1"><ImageUploader currentImage={item.imageUrl} onImageChange={(url) => updateItemField('promotions', item.id, 'imageUrl', url)} label="Vertical image (2:3 ratio required)" aspect={2/3} /></div>
                                  <div className="md:col-span-3 space-y-6">
@@ -480,11 +531,15 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   <div className="space-y-10">
                      <SectionSettingsEditor sectionKey="testimonials" localContent={localContent} isReadOnly={isReadOnly} onSectionStyleChange={handleSectionStyleChange} />
                      <SectionHeaderEditor sectionKey="testimonials" localContent={localContent} isReadOnly={isReadOnly} onHeaderChange={handleHeaderChange} />
-                     <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg dark:text-white">Client Feedback & Praise</h3><Button onClick={() => addItem('testimonials')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Feedback</Button></div>
+                     <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg dark:text-white">Client Feedback & Praise</h3><Button type="button" onClick={() => addItem('testimonials')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Feedback</Button></div>
                      <div className="grid gap-8">
                         {localContent.testimonials.map((item) => (
-                           <div key={item.id} className="p-8 border dark:border-gray-800 rounded-[2.5rem] bg-gray-50/30 dark:bg-gray-800/20 relative group">
-                              <button onClick={(e) => { e.stopPropagation(); removeItem('testimonials', item.id); }} className="absolute top-6 right-6 p-3 text-red-500 hover:text-red-700 transition-all opacity-100 bg-white/50 dark:bg-gray-800/50 rounded-xl z-50 cursor-pointer pointer-events-auto" disabled={!canDelete} title="Delete Feedback"><Trash2 size={20}/></button>
+                           <div key={item.id} className={`p-8 border dark:border-gray-800 rounded-[2.5rem] bg-gray-50/30 dark:bg-gray-800/20 relative group ${item.isHidden ? 'opacity-50' : ''}`}>
+                              <div className="absolute top-6 right-6 flex gap-2 z-[60]">
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); toggleHideItem('testimonials', item.id); }} className="p-3 text-gray-500 hover:text-primary-500 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto border dark:border-gray-700 shadow-md" disabled={isReadOnly} title={item.isHidden ? "Show Testimonial" : "Hide Testimonial"}>{item.isHidden ? <EyeOff size={20}/> : <Eye size={20}/>}</button>
+                                 <button type="button" onClick={(e) => { e.stopPropagation(); removeItem('testimonials', item.id); }} className="p-3 text-red-500 hover:text-red-700 transition-all bg-white dark:bg-gray-800 rounded-xl cursor-pointer pointer-events-auto border dark:border-gray-700 shadow-md" disabled={!canDelete} title="Delete Feedback"><Trash2 size={20}/></button>
+                              </div>
+                              {item.isHidden && <span className="absolute top-6 left-6 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-widest">Hidden</span>}
                               <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
                                  <div className="md:col-span-1"><ImageUploader currentImage={item.avatarUrl} onImageChange={(url) => updateItemField('testimonials', item.id, 'avatarUrl', url)} label="Client Photo" aspect={1} /></div>
                                  <div className="md:col-span-3 space-y-6">
@@ -507,10 +562,10 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                      <SectionHeaderEditor sectionKey="about" localContent={localContent} isReadOnly={isReadOnly} onHeaderChange={handleHeaderChange} />
                      <div><label className="label">Detailed Biography</label><textarea rows={10} value={localContent.about.content} onChange={(e) => setLocalContent(prev => ({...prev, about: {...prev.about, content: e.target.value}}))} className="input-field leading-relaxed" disabled={isReadOnly} /></div>
                      <div className="pt-10 border-t dark:border-gray-800">
-                        <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-xs uppercase tracking-widest text-gray-500">Expertise Levels</h3><Button onClick={() => addItem('about_expertises')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16}/></Button></div>
+                        <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-xs uppercase tracking-widest text-gray-500">Expertise Levels</h3><Button type="button" onClick={() => addItem('about_expertises')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16}/></Button></div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            {localContent.about.expertises.map((skill, idx) => (
-                              <div key={idx} className="flex gap-3 items-center group"><input value={skill} onChange={(e) => { const exp = [...localContent.about.expertises]; exp[idx] = e.target.value; setLocalContent(prev => ({...prev, about: {...prev.about, expertises: exp}})); }} className="input-field font-bold" disabled={isReadOnly} /><button onClick={(e) => { e.stopPropagation(); removeItem('about_expertises', idx.toString()); }} className="p-2 text-red-400 opacity-100 hover:text-red-500 transition-all z-50" disabled={!canDelete}><Trash2 size={18}/></button></div>
+                              <div key={idx} className="flex gap-3 items-center group"><input value={skill} onChange={(e) => { const exp = [...localContent.about.expertises]; exp[idx] = e.target.value; setLocalContent(prev => ({...prev, about: {...prev.about, expertises: exp}})); }} className="input-field font-bold" disabled={isReadOnly} /><button type="button" onClick={(e) => { e.stopPropagation(); removeItem('about_expertises', idx.toString()); }} className="p-2 text-red-400 opacity-100 hover:text-red-500 transition-all z-[60]" disabled={!canDelete}><Trash2 size={18}/></button></div>
                            ))}
                         </div>
                      </div>
@@ -537,7 +592,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                      </div>
                      <div className="pt-8 border-t dark:border-gray-800">
                         <label className="label text-red-500">Danger Zone</label>
-                        <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all font-bold rounded-xl" onClick={resetContent}>Hard Reset to Factory Defaults</Button>
+                        <Button type="button" variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all font-bold rounded-xl" onClick={resetContent}>Hard Reset to Factory Defaults</Button>
                      </div>
                   </div>
                )}
@@ -548,7 +603,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                      {history.length > 0 ? history.map(entry => (
                         <div key={entry.id} className="p-6 border dark:border-gray-800 rounded-3xl flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-all border-dashed">
                            <div><p className="font-bold text-gray-900 dark:text-white">{entry.label}</p><p className="text-xs text-gray-400 font-mono mt-1">{new Date(entry.timestamp).toLocaleString()}</p></div>
-                           <Button variant="outline" size="sm" className="rounded-xl font-bold" onClick={() => { if(window.confirm("Restore this version to editor? Current draft data will be replaced.")) restoreHistory(entry.id); }}>Restore Version</Button>
+                           <Button type="button" variant="outline" size="sm" className="rounded-xl font-bold" onClick={() => { if(window.confirm("Restore this version to editor? Current draft data will be replaced.")) restoreHistory(entry.id); }}>Restore Version</Button>
                         </div>
                      )) : <div className="py-20 text-center text-gray-400 italic">No published history available for this browser session.</div>}
                   </div>

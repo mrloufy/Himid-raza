@@ -14,6 +14,9 @@ interface ContentContextType {
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
+// Reduced history limit to save storage space
+const MAX_HISTORY = 5;
+
 export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [content, setContent] = useState<SiteContent>(INITIAL_CONTENT);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -53,7 +56,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     if (savedHistory) {
       try {
-        setHistory(JSON.parse(savedHistory).slice(0, 15));
+        setHistory(JSON.parse(savedHistory).slice(0, MAX_HISTORY));
       } catch (e) {}
     }
     
@@ -80,28 +83,45 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // 1. Immediate UI Update
     setContent(newContent);
     
-    try {
-      // 2. Persist to Draft (always, so admin changes are saved across reloads)
-      localStorage.setItem('siteContent_draft', JSON.stringify(newContent));
-      
-      // 3. If Publishing, Persist to Live site storage
-      if (isPublish) {
-        localStorage.setItem('siteContent_live', JSON.stringify(newContent));
-        
-        // Add to history
-        const entry: HistoryEntry = {
-          id: Date.now().toString(),
-          timestamp: Date.now(),
-          label: `Published: ${new Date().toLocaleString()}`,
-          content: JSON.stringify(newContent)
-        };
-        const newHistory = [entry, ...history].slice(0, 15);
-        setHistory(newHistory);
-        localStorage.setItem('siteHistory', JSON.stringify(newHistory));
+    const saveData = (key: string, data: any) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (error: any) {
+        if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+          console.warn("Storage quota reached. Purging older history to make space...");
+          // Try to clear history to free space
+          localStorage.removeItem('siteHistory');
+          setHistory([]);
+          // Try saving the data again after clearing history
+          try {
+             localStorage.setItem(key, JSON.stringify(data));
+          } catch (retryError) {
+             console.error("Critical Storage Error: Space still insufficient even after history purge.");
+             alert("Storage Error: Your browser storage is full. Please delete some projects or optimize your images further.");
+          }
+        } else {
+          console.error("Storage Error:", error);
+        }
       }
-    } catch (error) {
-      console.error("Storage Error (Quota likely exceeded):", error);
-      alert("System Warning: Browser storage limit reached. Changes saved in memory but might not persist after a hard refresh. Try reducing image sizes.");
+    };
+    
+    // 2. Persist to Draft (always)
+    saveData('siteContent_draft', newContent);
+    
+    // 3. If Publishing, Persist to Live site storage
+    if (isPublish) {
+      saveData('siteContent_live', newContent);
+      
+      // Add to history
+      const entry: HistoryEntry = {
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        label: `Published: ${new Date().toLocaleString()}`,
+        content: JSON.stringify(newContent)
+      };
+      const newHistory = [entry, ...history].slice(0, MAX_HISTORY);
+      setHistory(newHistory);
+      saveData('siteHistory', newHistory);
     }
   };
 

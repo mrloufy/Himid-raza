@@ -14,6 +14,8 @@ const AllCategories: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const visibleCategories = content.kdpCategories.filter(cat => !cat.isHidden);
+
   return (
     <div className="font-sans antialiased bg-white dark:bg-[#1E1E1E] min-h-screen flex flex-col transition-colors duration-500">
       <Header />
@@ -25,7 +27,7 @@ const AllCategories: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-                {content.kdpCategories.map((cat) => (
+                {visibleCategories.map((cat) => (
                     <div key={cat.id} className="group relative rounded-[2rem] overflow-hidden shadow-soft hover:shadow-premium hover:-translate-y-2 transition-all duration-700 border border-gray-100 dark:border-gray-800">
                         <div className="aspect-[2/3] w-full overflow-hidden img-zoom-parent bg-gray-100 dark:bg-gray-800 relative">
                             <img src={cat.imageUrl} alt={cat.title} className="w-full h-full object-cover" />
@@ -33,7 +35,7 @@ const AllCategories: React.FC = () => {
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                             <h3 className="text-xl font-bold mb-2">{cat.title}</h3>
-                            <p className="text-[11px] text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0 leading-relaxed">{cat.description}</p>
+                            <p className="text-xs md:text-sm text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0 leading-relaxed">{cat.description}</p>
                         </div>
                     </div>
                 ))}

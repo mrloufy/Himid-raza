@@ -24,6 +24,7 @@ const Home: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   const testimonialsRef = useRef<HTMLDivElement>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Update SEO
@@ -34,7 +35,7 @@ const Home: React.FC = () => {
     }
   }, [content, content.advanced?.seo, content.general.name]);
 
-  const categories = ['All', ...content.kdpCategories.map(cat => cat.title)];
+  const categories = ['All', ...content.kdpCategories.filter(cat => !cat.isHidden).map(cat => cat.title)];
 
   const getStyle = (config: TypographyStyle, isMobileHeader: boolean = false) => {
     const hex = config.color?.toLowerCase() || '#111827';
@@ -60,14 +61,24 @@ const Home: React.FC = () => {
     };
   };
 
-  const filteredProjects = activeCategory === 'All' 
-    ? content.portfolio 
-    : content.portfolio.filter(p => p.category === activeCategory);
+  // Base list of non-hidden items
+  const baseProjects = content.portfolio.filter(p => !p.isHidden);
+  const baseCategories = content.kdpCategories.filter(cat => !cat.isHidden);
+  const baseServices = content.services.filter(s => !s.isHidden);
+  const basePromotions = content.promotions.filter(p => !p.isHidden);
+  const baseTestimonials = content.testimonials.filter(t => !t.isHidden);
 
-  // Limit visible items on homepage to 9 max for desktop
-  const visibleCategories = content.kdpCategories.slice(0, 9);
+  // Filtered lists for display
+  const filteredProjects = activeCategory === 'All' 
+    ? baseProjects 
+    : baseProjects.filter(p => p.category === activeCategory);
+
+  // Slices for Home Page limit (Strictly 9 for categories to maintain 3x3)
+  const visibleCategories = baseCategories.slice(0, 9);
   const visibleProjects = filteredProjects.slice(0, 9);
-  const visibleServices = content.services.slice(0, 9);
+  const visibleServices = baseServices.slice(0, 9);
+  const visiblePromotions = basePromotions;
+  const visibleTestimonials = baseTestimonials;
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,10 +92,8 @@ const Home: React.FC = () => {
   const scrollTestimonials = (direction: 'left' | 'right') => {
     if (testimonialsRef.current) {
       const { current } = testimonialsRef;
-      // Get the width of the first card + gap (32px)
       const firstCard = current.children[0] as HTMLElement;
       const scrollAmount = firstCard ? firstCard.offsetWidth + 32 : 300;
-      
       current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -93,11 +102,9 @@ const Home: React.FC = () => {
   };
 
   const renderSection = (key: string) => {
-    // CHECK FOR CUSTOM BUILDER SECTIONS FIRST
     if (content.customSections && content.customSections[key]) {
       const customSection = content.customSections[key];
       const isSelected = selectedElementId === key;
-      
       return (
          <div 
            key={key} 
@@ -109,7 +116,6 @@ const Home: React.FC = () => {
               }
            }}
          >
-           {/* Section Level Controls */}
            {isEditing && isSelected && (
               <div className="absolute top-0 right-0 z-50 flex gap-2 p-2 bg-gray-900 text-white text-xs rounded-bl-lg">
                  <span>Custom Section</span>
@@ -121,7 +127,6 @@ const Home: React.FC = () => {
       );
     }
 
-    // STANDARD PRE-DEFINED SECTIONS
     const baseKey = key.split('-')[0];
     if (!content.enabledSections[key] && !content.enabledSections[baseKey] && !isEditing) return null;
 
@@ -163,24 +168,55 @@ const Home: React.FC = () => {
                     style={{ ...getStyle(content.typography.bodyText), textAlign: content.typography.heroTitle.textAlign as any }}
                     multiline
                   />
-                  <div className={`pt-4 flex flex-wrap gap-6 ${content.typography.heroTitle.textAlign === 'center' ? 'justify-center' : content.typography.heroTitle.textAlign === 'right' ? 'justify-end' : 'justify-start'}`}>
-                     <Button 
-                      onClick={() => !isEditing && document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} 
-                      size="lg" 
-                      className={`px-12 rounded-xl hover-lift shadow-glow ${content.general.buttonStyle === 'pill' ? 'rounded-full' : content.general.buttonStyle === 'square' ? 'rounded-none' : ''}`}
-                      style={{ backgroundColor: content.general.brandColor }}
-                     >
-                       <EditableText tag="span" path="general.heroCtaText" value={content.general.heroCtaText || "Hire Me"} />
-                     </Button>
-                     <Button 
-                      variant="outline" 
-                      size="lg" 
-                      className={`px-12 rounded-xl hover-lift ${content.general.buttonStyle === 'pill' ? 'rounded-full' : content.general.buttonStyle === 'square' ? 'rounded-none' : ''}`}
-                      onClick={() => !isEditing && document.getElementById('portfolio')?.scrollIntoView({behavior:'smooth'})}
-                      style={{ borderColor: content.general.brandColor, color: content.general.brandColor }}
-                     >
-                       See My Books
-                     </Button>
+                  
+                  <div className={`pt-4 flex flex-col gap-6 ${content.typography.heroTitle.textAlign === 'center' ? 'items-center' : content.typography.heroTitle.textAlign === 'right' ? 'items-end' : 'items-start'}`}>
+                    <div className={`flex flex-wrap gap-6 ${content.typography.heroTitle.textAlign === 'center' ? 'justify-center' : content.typography.heroTitle.textAlign === 'right' ? 'justify-end' : 'justify-start'}`}>
+                       <Button 
+                        onClick={() => !isEditing && document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} 
+                        size="lg" 
+                        className={`px-12 rounded-xl hover-lift shadow-glow ${content.general.buttonStyle === 'pill' ? 'rounded-full' : content.general.buttonStyle === 'square' ? 'rounded-none' : ''}`}
+                        style={{ backgroundColor: content.general.brandColor }}
+                       >
+                         <EditableText tag="span" path="general.heroCtaText" value={content.general.heroCtaText || "Hire Me"} />
+                       </Button>
+                       <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className={`px-12 rounded-xl hover-lift ${content.general.buttonStyle === 'pill' ? 'rounded-full' : content.general.buttonStyle === 'square' ? 'rounded-none' : ''}`}
+                        onClick={() => !isEditing && document.getElementById('portfolio')?.scrollIntoView({behavior:'smooth'})}
+                        style={{ borderColor: content.general.brandColor, color: content.general.brandColor }}
+                       >
+                         See My Books
+                       </Button>
+                    </div>
+
+                    {/* Social Buttons Section */}
+                    {(content.general.linkedin || content.general.fiverr) && (
+                      <div className="flex items-center gap-4 pt-4 animate-fade-in">
+                         {content.general.linkedin && (
+                           <a 
+                             href={content.general.linkedin} 
+                             target="_blank" 
+                             rel="noopener noreferrer" 
+                             className="w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-700 dark:text-white shadow-soft hover-lift transition-all hover:text-[#0077b5] border border-gray-100 dark:border-gray-800"
+                             title="Connect on LinkedIn"
+                           >
+                              <Icons.Linkedin size={20} />
+                           </a>
+                         )}
+                         {content.general.fiverr && (
+                           <a 
+                             href={content.general.fiverr} 
+                             target="_blank" 
+                             rel="noopener noreferrer" 
+                             className="w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-700 dark:text-white shadow-soft hover-lift transition-all hover:text-[#1dbf73] border border-gray-100 dark:border-gray-800"
+                             title="Hire me on Fiverr"
+                           >
+                              <span className="font-bold text-sm tracking-tighter">fi</span>
+                           </a>
+                         )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="order-1 lg:order-2 flex justify-center items-center relative reveal stagger-2">
@@ -272,6 +308,7 @@ const Home: React.FC = () => {
           </SectionWrapper>
         );
       case 'services':
+        if (baseServices.length === 0 && !isEditing) return null;
         return (
           <SectionWrapper key={key} sectionKey={key} title="Services">
           <section id="services" style={sectionStyles} className="bg-gray-50 dark:bg-[#1a1a1a]">
@@ -293,9 +330,10 @@ const Home: React.FC = () => {
                  />
                </div>
                
-               {/* Mobile: 3 items per row, max 2 rows (6 items) */}
                <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-10 lg:gap-14">
-                 {visibleServices.map((service, index) => (
+                 {visibleServices.map((service, index) => {
+                   const originalIndex = content.services.findIndex(s => s.id === service.id);
+                   return (
                    <div 
                       key={service.id} 
                       className={`bg-white dark:bg-[#272727] p-3 md:p-10 lg:p-14 rounded-2xl md:rounded-[2.5rem] hover:shadow-premium hover:-translate-y-1 md:hover:-translate-y-3 transition-all duration-500 group reveal stagger-1 border border-transparent hover:border-primary-500/10 shadow-soft flex flex-col items-center md:items-start text-center md:text-left ${index >= 6 ? 'hidden md:flex' : 'flex'}`}
@@ -305,18 +343,18 @@ const Home: React.FC = () => {
                      </div>
                      <EditableText
                        tag="h3"
-                       path={`services[${index}].title`}
+                       path={`services[${originalIndex}].title`}
                        value={service.title}
                        className="text-xs md:text-2xl font-bold text-gray-900 dark:text-white mb-1 md:mb-6 leading-tight w-full break-words"
                      />
                      <EditableText
                        tag="p"
-                       path={`services[${index}].description`}
+                       path={`services[${originalIndex}].description`}
                        value={service.description}
                        className="text-gray-600 dark:text-gray-400 leading-relaxed text-[10px] md:text-base lg:text-lg line-clamp-3 md:line-clamp-none hidden sm:block"
                      />
                    </div>
-                 ))}
+                 );})}
                </div>
              </div>
           </section>
@@ -390,6 +428,7 @@ const Home: React.FC = () => {
           </SectionWrapper>
         );
       case 'kdpCategories':
+        if (baseCategories.length === 0 && !isEditing) return null;
         return (
           <SectionWrapper key={key} sectionKey={key} title="Categories">
           <section id="kdpCategories" style={sectionStyles} className="bg-white dark:bg-[#1E1E1E]">
@@ -411,17 +450,17 @@ const Home: React.FC = () => {
                   />
                </div>
                
-               {/* Strictly 2:3 ratio grid items */}
-               <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-10">
-                  {visibleCategories.map((cat, index) => (
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+                  {visibleCategories.map((cat, index) => {
+                     const originalIndex = content.kdpCategories.findIndex(c => c.id === cat.id);
+                     return (
                      <div 
                         key={cat.id} 
-                        className={`group relative rounded-xl md:rounded-[2rem] overflow-hidden shadow-soft hover:shadow-premium hover:-translate-y-2 transition-all duration-700 reveal border border-gray-100 dark:border-gray-800 ${index >= 6 ? 'hidden md:block' : ''}`}
+                        className="group relative rounded-xl md:rounded-[2rem] overflow-hidden shadow-soft hover:shadow-premium hover:-translate-y-2 transition-all duration-700 reveal border border-gray-100 dark:border-gray-800"
                      >
-                        {/* Container is locked to 2:3 ratio */}
                         <div className="aspect-[2/3] w-full overflow-hidden img-zoom-parent bg-gray-100 dark:bg-gray-800 relative">
                            <EditableImage 
-                              path={`kdpCategories[${index}].imageUrl`}
+                              path={`kdpCategories[${originalIndex}].imageUrl`}
                               src={cat.imageUrl} 
                               alt={cat.title} 
                               className="w-full h-full object-cover" 
@@ -433,21 +472,21 @@ const Home: React.FC = () => {
                         <div className="absolute bottom-0 left-0 right-0 p-2 md:p-8 text-white">
                            <EditableText
                               tag="h3"
-                              path={`kdpCategories[${index}].title`}
+                              path={`kdpCategories[${originalIndex}].title`}
                               value={cat.title}
-                              className="text-[10px] md:text-xl font-bold mb-0 md:mb-2 leading-tight"
+                              className="text-sm md:text-xl font-bold mb-0 md:mb-2 leading-tight"
                            />
                            <EditableText
                               tag="p"
-                              path={`kdpCategories[${index}].description`}
+                              path={`kdpCategories[${originalIndex}].description`}
                               value={cat.description}
                               className="hidden md:block text-[11px] text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0 leading-relaxed"
                            />
                         </div>
                      </div>
-                  ))}
+                  );})}
                </div>
-               {content.kdpCategories.length > 6 && !isEditing && (
+               {baseCategories.length > 9 && !isEditing && (
                    <div className="mt-8 md:mt-12 text-center reveal">
                         <Button 
                             variant="primary" 
@@ -464,6 +503,7 @@ const Home: React.FC = () => {
           </SectionWrapper>
         );
       case 'promotions':
+        if (basePromotions.length === 0 && !isEditing) return null;
         return (
           <SectionWrapper key={key} sectionKey={key} title="Promotions">
           <section id="promotions" style={sectionStyles} className="bg-gray-50 dark:bg-[#1a1a1a]">
@@ -485,11 +525,13 @@ const Home: React.FC = () => {
                  />
                </div>
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-                 {content.promotions.map((promo, index) => (
+                 {visiblePromotions.map((promo, index) => {
+                   const originalIndex = content.promotions.findIndex(p => p.id === promo.id);
+                   return (
                    <div key={promo.id} className="group relative bg-white dark:bg-[#272727] rounded-[3rem] overflow-hidden shadow-soft hover:shadow-premium transition-all duration-500 reveal stagger-1 flex flex-col sm:flex-row h-full border border-gray-100 dark:border-gray-800">
                       <div className="w-full sm:w-1/2 aspect-[2/3] overflow-hidden">
                         <EditableImage 
-                          path={`promotions[${index}].imageUrl`}
+                          path={`promotions[${originalIndex}].imageUrl`}
                           src={promo.imageUrl} 
                           alt={promo.title} 
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
@@ -500,13 +542,13 @@ const Home: React.FC = () => {
                       <div className="p-10 lg:p-14 sm:w-1/2 flex flex-col justify-center">
                         <EditableText
                           tag="h3"
-                          path={`promotions[${index}].title`}
+                          path={`promotions[${originalIndex}].title`}
                           value={promo.title}
                           className="text-3xl font-bold text-gray-900 dark:text-white mb-6 leading-tight"
                         />
                         <EditableText
                           tag="p"
-                          path={`promotions[${index}].description`}
+                          path={`promotions[${originalIndex}].description`}
                           value={promo.description}
                           className="text-gray-600 dark:text-gray-400 text-base lg:text-lg leading-relaxed mb-10 line-clamp-4"
                         />
@@ -521,13 +563,16 @@ const Home: React.FC = () => {
                         </Button>
                       </div>
                    </div>
-                 ))}
+                 );})}
                </div>
             </div>
           </section>
           </SectionWrapper>
         );
       case 'portfolio':
+        // CRITICAL FIX: Base hiding on whether ANY projects exist, not the filtered list.
+        if (baseProjects.length === 0 && !isEditing) return null;
+        
         return (
           <SectionWrapper key={key} sectionKey={key} title="Portfolio">
           <section id="portfolio" style={sectionStyles} className="bg-white dark:bg-[#1E1E1E]">
@@ -548,33 +593,51 @@ const Home: React.FC = () => {
                     className="mb-8 md:mb-14 text-gray-600 dark:text-gray-400 text-sm md:text-lg lg:text-xl"
                  />
                  {!isEditing && (
-                    <div className="flex flex-wrap justify-center gap-2 md:gap-6 mb-10 md:mb-20">
-                      {categories.map(cat => (
-                          <button 
-                            key={cat} 
-                            onClick={() => setActiveCategory(cat)}
-                            className={`px-4 py-2 md:px-10 md:py-4 rounded-full text-xs md:text-sm font-bold transition-all duration-500 transform hover-lift ${activeCategory === cat ? 'bg-primary-500 text-white shadow-glow translate-y-[-4px]' : 'bg-white dark:bg-[#272727] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-primary-500 hover:shadow-lg'}`}
-                            style={activeCategory === cat ? { backgroundColor: content.general.brandColor } : {}}
-                          >
-                            {cat}
-                          </button>
-                      ))}
+                    <div className="relative mb-12 md:mb-20">
+                      {/* Swipeable Category Menu */}
+                      <div className="flex justify-center">
+                        <div className="relative w-full max-w-4xl px-12">
+                           <div 
+                              ref={categoryScrollRef}
+                              className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-2 md:gap-4 pb-4 px-2 scroll-smooth mask-fade"
+                           >
+                              {categories.map(cat => (
+                                 <button 
+                                    key={cat} 
+                                    onClick={() => setActiveCategory(cat)}
+                                    className={`flex-shrink-0 snap-center px-6 py-3 md:px-10 md:py-4 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest transition-all duration-500 transform ${activeCategory === cat ? 'text-white shadow-premium scale-105 z-10' : 'bg-gray-50 dark:bg-[#272727] text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white hover:border-primary-200'}`}
+                                    style={activeCategory === cat ? { backgroundColor: content.general.brandColor } : {}}
+                                 >
+                                    {cat}
+                                 </button>
+                              ))}
+                           </div>
+                           
+                           {/* Fade Indicators for Swiping */}
+                           <div className="absolute top-0 left-8 bottom-4 w-12 bg-gradient-to-r from-white dark:from-[#1E1E1E] to-transparent pointer-events-none z-20"></div>
+                           <div className="absolute top-0 right-8 bottom-4 w-12 bg-gradient-to-l from-white dark:from-[#1E1E1E] to-transparent pointer-events-none z-20"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Swipe Icon Hint (Mobile only) */}
+                      <div className="flex md:hidden justify-center mt-2 opacity-30 items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                        <Icons.ArrowLeftRight size={12} className="animate-pulse" /> Swipe Genres
+                      </div>
                     </div>
                  )}
                </div>
                
-               {/* Mobile: 3 items per row, strictly locked to 2:3 vertical aspect */}
                <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-12 lg:gap-20 min-h-[200px] md:min-h-[500px]">
                   {visibleProjects.length > 0 ? (
-                    visibleProjects.map((project, index) => (
+                    visibleProjects.map((project, index) => {
+                      const originalIndex = content.portfolio.findIndex(p => p.id === project.id);
+                      return (
                       <div key={project.id} className={`reveal stagger-1 ${index >= 6 ? 'hidden md:block' : ''}`}>
-                         {/* 3D Perspective Wrapper - Height is derived from aspect ratio */}
                          <div className="project-perspective w-full aspect-[2/3] group cursor-pointer">
                             <div className="project-card w-full h-full relative">
-                                {/* Inner Image Wrapper - Locked to 2:3 aspect */}
                                 <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 shadow-sm z-10">
                                      <EditableImage
-                                        path={`portfolio[${index}].imageUrl`}
+                                        path={`portfolio[${originalIndex}].imageUrl`}
                                         src={project.imageUrl} 
                                         alt={project.title} 
                                         className="w-full h-full object-cover" 
@@ -582,24 +645,23 @@ const Home: React.FC = () => {
                                         label="Vertical Book Cover (2:3)"
                                       />
                                      
-                                     {/* Overlay Content */}
                                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 md:p-8 flex flex-col justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                                           <EditableText
                                             tag="p"
-                                            path={`portfolio[${index}].bookType`}
+                                            path={`portfolio[${originalIndex}].bookType`}
                                             value={project.bookType}
                                             className="text-[8px] md:text-xs font-bold uppercase tracking-widest text-primary-500 mb-0.5 md:mb-3 pointer-events-auto" 
                                             style={{ color: content.general.brandColor }}
                                           />
                                           <EditableText
                                             tag="h3"
-                                            path={`portfolio[${index}].title`}
+                                            path={`portfolio[${originalIndex}].title`}
                                             value={project.title}
                                             className="text-[10px] md:text-2xl font-bold text-white mb-0 md:mb-4 leading-tight truncate md:whitespace-normal pointer-events-auto"
                                           />
                                           <EditableText
                                             tag="p"
-                                            path={`portfolio[${index}].description`}
+                                            path={`portfolio[${originalIndex}].description`}
                                             value={project.description}
                                             className="hidden md:block text-sm lg:text-base text-gray-300 line-clamp-3 leading-relaxed pointer-events-auto"
                                           />
@@ -608,12 +670,19 @@ const Home: React.FC = () => {
                             </div>
                          </div>
                       </div>
-                    ))
+                    );})
                   ) : (
-                    <div className="col-span-full py-10 md:py-32 text-center bg-gray-50 dark:bg-[#272727] rounded-3xl md:rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-gray-700">
-                      <div className="w-12 h-12 md:w-24 md:h-24 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-8 text-gray-400"><Icons.Search className="w-6 h-6 md:w-10 md:h-10" /></div>
+                    <div className="col-span-full py-10 md:py-32 text-center bg-gray-50/50 dark:bg-[#272727]/30 rounded-3xl md:rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-gray-700 reveal">
+                      <div className="w-12 h-12 md:w-24 md:h-24 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-8 text-gray-300 dark:text-gray-600 shadow-sm"><Icons.Search className="w-6 h-6 md:w-10 md:h-10" /></div>
                       <p className="text-gray-500 dark:text-gray-400 text-sm md:text-2xl font-medium">No projects in "{activeCategory}" yet.</p>
-                      <button onClick={() => setActiveCategory('All')} className="mt-4 md:mt-6 text-primary-500 font-bold text-sm md:text-lg hover:underline" style={{ color: content.general.brandColor }}>Explore all work</button>
+                      <p className="text-xs md:text-base text-gray-400 dark:text-gray-500 mt-2">I am constantly updating my portfolio with new genre masterpieces.</p>
+                      <button 
+                        onClick={() => setActiveCategory('All')} 
+                        className="mt-6 md:mt-10 px-8 py-3 bg-white dark:bg-gray-800 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest shadow-md hover:shadow-lg transition-all border border-gray-100 dark:border-gray-700"
+                        style={{ color: content.general.brandColor }}
+                      >
+                        Explore all work
+                      </button>
                     </div>
                   )}
                </div>
@@ -631,10 +700,17 @@ const Home: React.FC = () => {
                    </div>
                )}
              </div>
+             <style>{`
+               .mask-fade {
+                 -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+                 mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+               }
+             `}</style>
           </section>
           </SectionWrapper>
         );
       case 'testimonials':
+        if (baseTestimonials.length === 0 && !isEditing) return null;
         return (
           <SectionWrapper key={key} sectionKey={key} title="Testimonials">
           <section id="testimonials" style={sectionStyles} className="bg-white dark:bg-[#1E1E1E] overflow-hidden">
@@ -656,9 +732,7 @@ const Home: React.FC = () => {
                  />
                </div>
                
-               {/* Testimonial Carousel */}
                <div className="relative group/carousel">
-                  {/* Left Arrow */}
                   <button 
                     onClick={() => scrollTestimonials('left')}
                     className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 z-20 w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-premium flex items-center justify-center text-gray-600 dark:text-white hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/carousel:opacity-100 border border-gray-100 dark:border-gray-700"
@@ -671,7 +745,9 @@ const Home: React.FC = () => {
                     ref={testimonialsRef}
                     className="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-12 pt-4 px-4 -mx-4 no-scrollbar scroll-smooth"
                   >
-                    {content.testimonials.map((t, index) => (
+                    {visibleTestimonials.map((t, index) => {
+                      const originalIndex = content.testimonials.findIndex(test => test.id === t.id);
+                      return (
                       <div 
                         key={t.id} 
                         className="snap-center flex-shrink-0 w-[85vw] md:w-[600px] lg:w-[700px] bg-gray-50 dark:bg-[#272727] p-8 md:p-12 lg:p-16 rounded-[2.5rem] shadow-soft hover:shadow-premium border-2 border-transparent hover:border-primary-500/10 dark:hover:bg-[#2d2d2d] hover:bg-white transition-all duration-500 flex flex-col md:flex-row items-center gap-8 md:gap-12"
@@ -679,7 +755,7 @@ const Home: React.FC = () => {
                          <div className="flex-shrink-0 relative">
                            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full p-1.5 bg-gradient-to-br from-white to-gray-200 dark:from-gray-700 dark:to-gray-800 shadow-lg">
                               <EditableImage
-                                path={`testimonials[${index}].avatarUrl`}
+                                path={`testimonials[${originalIndex}].avatarUrl`}
                                 src={t.avatarUrl || `https://ui-avatars.com/api/?name=${t.clientName}&background=random`} 
                                 alt={t.clientName} 
                                 className="w-full h-full rounded-full object-cover border-4 border-white dark:border-gray-800"
@@ -691,20 +767,20 @@ const Home: React.FC = () => {
                          <div className="text-center md:text-left flex-1">
                            <EditableText
                               tag="p"
-                              path={`testimonials[${index}].content`}
+                              path={`testimonials[${originalIndex}].content`}
                               value={`"${t.content}"`}
                               className="text-gray-700 dark:text-gray-300 text-lg md:text-xl leading-relaxed italic mb-6"
                            />
                            <div>
                              <EditableText
                                 tag="h4"
-                                path={`testimonials[${index}].clientName`}
+                                path={`testimonials[${originalIndex}].clientName`}
                                 value={t.clientName}
                                 className="font-heading font-bold text-xl text-gray-900 dark:text-white"
                              />
                              <EditableText
                                 tag="p"
-                                path={`testimonials[${index}].role`}
+                                path={`testimonials[${originalIndex}].role`}
                                 value={t.role}
                                 className="text-xs font-black uppercase opacity-60 tracking-[0.2em] mt-1" 
                                 style={{ color: content.general.brandColor }}
@@ -712,10 +788,9 @@ const Home: React.FC = () => {
                            </div>
                          </div>
                       </div>
-                    ))}
+                    );})}
                   </div>
 
-                  {/* Right Arrow */}
                   <button 
                     onClick={() => scrollTestimonials('right')}
                     className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 z-20 w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-premium flex items-center justify-center text-gray-600 dark:text-white hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/carousel:opacity-100 border border-gray-100 dark:border-gray-700"

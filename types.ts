@@ -1,5 +1,4 @@
 
-
 export type AdminRole = 'super_admin' | 'editor' | 'viewer';
 
 export interface HistoryEntry {
@@ -52,6 +51,7 @@ export interface Service {
   title: string;
   description: string;
   iconName: string;
+  isHidden?: boolean;
 }
 
 export interface KdpCategory {
@@ -59,6 +59,7 @@ export interface KdpCategory {
   title: string;
   description: string;
   imageUrl: string;
+  isHidden?: boolean;
 }
 
 export interface Project {
@@ -68,6 +69,7 @@ export interface Project {
   description: string;
   imageUrl: string;
   category: string;
+  isHidden?: boolean;
 }
 
 export interface Promotion {
@@ -75,6 +77,7 @@ export interface Promotion {
   title: string;
   description: string;
   imageUrl: string;
+  isHidden?: boolean;
 }
 
 export interface Testimonial {
@@ -83,6 +86,7 @@ export interface Testimonial {
   content: string;
   role: string;
   avatarUrl?: string;
+  isHidden?: boolean;
 }
 
 // --- NEW BUILDER TYPES ---

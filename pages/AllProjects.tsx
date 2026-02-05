@@ -12,11 +12,12 @@ const AllProjects: React.FC = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('All');
   
-  const categories = ['All', ...content.kdpCategories.map(cat => cat.title)];
+  const categories = ['All', ...content.kdpCategories.filter(cat => !cat.isHidden).map(cat => cat.title)];
   
-  const filteredProjects = activeCategory === 'All' 
+  const filteredProjects = (activeCategory === 'All' 
     ? content.portfolio 
-    : content.portfolio.filter(p => p.category === activeCategory);
+    : content.portfolio.filter(p => p.category === activeCategory))
+    .filter(p => !p.isHidden);
 
   useEffect(() => {
     window.scrollTo(0, 0);
