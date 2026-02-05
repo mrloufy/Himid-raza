@@ -1,0 +1,74 @@
+/* 
+  Custom Overrides matching React App 
+  Tailwind CDN handles 99% of styling.
+*/
+
+/* Hover Lift Effect */
+.hover-lift { 
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease; 
+}
+.hover-lift:hover { 
+    transform: translateY(-4px); 
+}
+
+/* 3D Project Card Effect */
+.project-perspective { 
+    perspective: 1500px; 
+    transform-style: preserve-3d; 
+}
+
+.project-card { 
+    transform-style: preserve-3d; 
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); 
+}
+
+.project-perspective:hover .project-card { 
+    transform: translateY(-10px) rotateY(-5deg) rotateX(2deg); 
+}
+
+/* Image Zoom */
+.img-zoom-parent img { 
+    transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+.img-zoom-parent:hover img { 
+    transform: scale(1.1); 
+}
+
+/* Scrollbar Hiding */
+.no-scrollbar::-webkit-scrollbar { 
+    display: none; 
+}
+.no-scrollbar { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
+
+/* Reveal Animation Class */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease-out;
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+
+/* Mask Fade for horizontal scroll */
+.mask-fade {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+/* Specific Shimmer for Skills */
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+    animation: shimmer 2.5s infinite linear;
+}
