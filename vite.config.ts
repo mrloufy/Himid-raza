@@ -7,5 +7,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true
+  },
+  // Fix for "process is not defined" error in browser
+  define: {
+    'process.env': {}
   }
 });

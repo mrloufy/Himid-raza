@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, Bot, Sparkles } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
@@ -90,7 +89,11 @@ const ChatWidget: React.FC = () => {
 
     } catch (error) {
         console.error("Chat Error:", error);
-        setMessages(prev => [...prev, { role: 'model', text: "I apologize, but I'm having trouble connecting to the server right now. Please try again in a moment." }]);
+        let errorMessage = "I apologize, but I'm having trouble connecting to the server right now.";
+        if ((error as any).message?.includes("API Key")) {
+            errorMessage = "I'm currently offline (API Configuration Missing). Please contact the site owner.";
+        }
+        setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
         setIsLoading(false);
     }
