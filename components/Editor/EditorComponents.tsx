@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useEditor } from '../../context/EditorContext';
 import { Camera, Eye, EyeOff, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
@@ -83,7 +82,7 @@ export const EditableImage: React.FC<EditableImageProps> = ({ path, src, classNa
                  <button onClick={() => setIsUploading(false)} className="text-gray-500"><EyeOff size={20}/></button>
               </div>
               <ImageUploader 
-                currentImage={src} 
+                currentImage={typeof src === 'string' ? src : undefined} 
                 aspect={aspect}
                 label={label}
                 onImageChange={(newUrl) => {

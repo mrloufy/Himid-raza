@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BuilderElement, BuilderStyle } from '../../types';
 import { useEditor } from '../../context/EditorContext';
@@ -58,7 +57,7 @@ const BuilderRenderer: React.FC<BuilderRendererProps> = ({ element, isRoot = fal
           >
              <Controls />
              {element.children?.map(child => <BuilderRenderer key={child.id} element={child} />)}
-             {isEditing && (element.children?.length === 0 || element.type === 'column') && (
+             {isEditing && (element.children?.length === 0) && (
                 <div className="p-4 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg m-2">
                    <p className="text-[10px] text-gray-400 uppercase font-bold mb-2">Empty {element.type}</p>
                    <button 
