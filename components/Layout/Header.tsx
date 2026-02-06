@@ -111,7 +111,6 @@ const Header: React.FC = () => {
               <span className="text-sm font-bold text-gray-400">Settings</span>
               <div className="flex items-center gap-4">
                  <ThemeToggle />
-                 <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="text-xs font-black uppercase tracking-widest text-primary-500">Admin</Link>
               </div>
            </div>
         </div>

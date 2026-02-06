@@ -93,18 +93,8 @@ const Footer: React.FC = () => {
         <div className="h-px w-full bg-gray-200 dark:bg-gray-800 mb-12"></div>
         
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400 gap-8">
-           <div className="flex items-center gap-8 relative z-[500]">
-             <Link 
-               to="/admin" 
-               className="px-8 py-4 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary-500 hover:text-white transition-all shadow-md border border-gray-200 dark:border-gray-700 active:scale-95 whitespace-nowrap block"
-               style={{ pointerEvents: 'auto' }}
-             >
-               Admin Panel Access
-             </Link>
-           </div>
-           
-           <p className="font-medium text-center md:text-left">&copy; {year} {general.name} &bull; {footer.copyright}</p>
+        <div className="flex justify-center items-center text-sm text-gray-500 dark:text-gray-400 gap-8">
+           <p className="font-medium text-center">&copy; {year} {general.name} &bull; {footer.copyright}</p>
         </div>
       </div>
     </footer>

@@ -11,19 +11,79 @@
     transform: translateY(-4px); 
 }
 
-/* 3D Project Card Effect */
+/* 3D Project Book Mockup Effect */
 .project-perspective { 
     perspective: 1500px; 
-    transform-style: preserve-3d; 
+    transform-style: preserve-3d;
+    z-index: 10;
 }
 
 .project-card { 
-    transform-style: preserve-3d; 
-    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); 
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .project-perspective:hover .project-card { 
-    transform: translateY(-10px) rotateY(-5deg) rotateX(2deg); 
+    transform: rotateY(-25deg) rotateX(10deg) translateZ(10px) translateX(10px);
+}
+
+/* Front Cover (Main Image Container) */
+.project-card > div.book-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateZ(15px);
+    z-index: 5;
+    background: white;
+    /* Subtle binding gradient overlay */
+    background-image: linear-gradient(90deg, 
+        rgba(255,255,255,0.2) 0%, 
+        rgba(255,255,255,0) 5%, 
+        rgba(255,255,255,0) 95%, 
+        rgba(0,0,0,0.1) 100%
+    );
+    box-shadow: 
+        -1px 0 2px rgba(0,0,0,0.1), /* Spine highlight */
+        5px 5px 15px rgba(0,0,0,0.15); /* Drop shadow */
+}
+
+/* Page Thickness - Right Side */
+.project-card::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 0;
+    width: 30px; /* Thickness */
+    height: calc(100% - 6px);
+    background: linear-gradient(90deg, 
+        #fdfdfd 0%, #f1f1f1 20%, #fff 40%, #f1f1f1 60%, #fff 80%, #eee 100%
+    );
+    transform: rotateY(90deg) translateZ(-15px); /* Position at right edge */
+    transform-origin: right center;
+    border: 1px solid #e5e5e5;
+    z-index: 1;
+}
+
+/* Page Thickness - Bottom Side */
+.project-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 3px;
+    width: calc(100% - 6px);
+    height: 30px; /* Thickness */
+    background: linear-gradient(180deg, 
+        #fdfdfd 0%, #f1f1f1 20%, #fff 40%, #f1f1f1 60%, #fff 80%, #eee 100%
+    );
+    transform: rotateX(90deg) translateZ(-15px);
+    transform-origin: bottom center;
+    border: 1px solid #e5e5e5;
+    z-index: 1;
 }
 
 /* Image Zoom */

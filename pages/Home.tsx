@@ -468,7 +468,7 @@ const Home: React.FC = () => {
                   />
                </div>
                
-               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+               <div className="grid grid-cols-3 gap-3 md:gap-10">
                   {visibleCategories.map((cat, index) => {
                      const originalIndex = content.kdpCategories.findIndex(c => c.id === cat.id);
                      return (
@@ -487,12 +487,12 @@ const Home: React.FC = () => {
                            />
                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-500 pointer-events-none"></div>
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 p-2 md:p-8 text-white">
+                        <div className="absolute bottom-0 left-0 right-0 p-1.5 md:p-8 text-white">
                            <EditableText
                               tag="h3"
                               path={`kdpCategories[${originalIndex}].title`}
                               value={cat.title}
-                              className="text-sm md:text-xl font-bold mb-0 md:mb-2 leading-tight"
+                              className="text-[10px] sm:text-xs md:text-xl font-bold mb-0 md:mb-2 leading-tight"
                            />
                            <EditableText
                               tag="p"
@@ -647,7 +647,8 @@ const Home: React.FC = () => {
                       <div key={project.id} className={`reveal stagger-1 ${index >= 6 ? 'hidden md:block' : ''}`}>
                          <div className="project-perspective w-full aspect-[2/3] group cursor-pointer">
                             <div className="project-card w-full h-full relative">
-                                <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 shadow-sm z-10">
+                                {/* The "Front Cover" div with book-cover class for 3D logic */}
+                                <div className="book-cover relative w-full h-full rounded-[4px] overflow-hidden bg-white dark:bg-gray-800 shadow-sm z-10">
                                      <EditableImage
                                         path={`portfolio[${originalIndex}].imageUrl`}
                                         src={project.imageUrl} 
