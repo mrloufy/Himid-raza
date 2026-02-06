@@ -110,6 +110,7 @@ const Header: React.FC = () => {
            <div className="pt-8 mt-8 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <span className="text-sm font-bold text-gray-400">Settings</span>
               <div className="flex items-center gap-4">
+                 <Link to="/admin" className="text-sm font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white">Admin</Link>
                  <ThemeToggle />
               </div>
            </div>
