@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import * as Icons from 'lucide-react';
 import { useContent } from '../context/SiteContext';
@@ -25,6 +24,26 @@ const Home: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   const testimonialsRef = useRef<HTMLDivElement>(null);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  // Fix for the "Reveal" animation issue
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, { 
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px"
+    });
+
+    // Observe all elements with the 'reveal' class
+    const revealElements = document.querySelectorAll('.reveal');
+    revealElements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [content, activeCategory]); // Re-run when content or filters change
 
   useEffect(() => {
     // Update SEO
@@ -190,7 +209,6 @@ const Home: React.FC = () => {
                        </Button>
                     </div>
 
-                    {/* Social Buttons Section */}
                     {(content.general.linkedin || content.general.fiverr) && (
                       <div className="flex items-center gap-4 pt-4 animate-fade-in">
                          {content.general.linkedin && (
@@ -570,7 +588,6 @@ const Home: React.FC = () => {
           </SectionWrapper>
         );
       case 'portfolio':
-        // CRITICAL FIX: Base hiding on whether ANY projects exist, not the filtered list.
         if (baseProjects.length === 0 && !isEditing) return null;
         
         return (
@@ -594,7 +611,6 @@ const Home: React.FC = () => {
                  />
                  {!isEditing && (
                     <div className="relative mb-12 md:mb-20">
-                      {/* Swipeable Category Menu */}
                       <div className="flex justify-center">
                         <div className="relative w-full max-w-4xl px-12">
                            <div 
@@ -612,14 +628,10 @@ const Home: React.FC = () => {
                                  </button>
                               ))}
                            </div>
-                           
-                           {/* Fade Indicators for Swiping */}
                            <div className="absolute top-0 left-8 bottom-4 w-12 bg-gradient-to-r from-white dark:from-[#1E1E1E] to-transparent pointer-events-none z-20"></div>
                            <div className="absolute top-0 right-8 bottom-4 w-12 bg-gradient-to-l from-white dark:from-[#1E1E1E] to-transparent pointer-events-none z-20"></div>
                         </div>
                       </div>
-                      
-                      {/* Swipe Icon Hint (Mobile only) */}
                       <div className="flex md:hidden justify-center mt-2 opacity-30 items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
                         <Icons.ArrowLeftRight size={12} className="animate-pulse" /> Swipe Genres
                       </div>
@@ -644,7 +656,6 @@ const Home: React.FC = () => {
                                         aspect={2/3}
                                         label="Vertical Book Cover (2:3)"
                                       />
-                                     
                                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 md:p-8 flex flex-col justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                                           <EditableText
                                             tag="p"
@@ -675,18 +686,10 @@ const Home: React.FC = () => {
                     <div className="col-span-full py-10 md:py-32 text-center bg-gray-50/50 dark:bg-[#272727]/30 rounded-3xl md:rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-gray-700 reveal">
                       <div className="w-12 h-12 md:w-24 md:h-24 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-8 text-gray-300 dark:text-gray-600 shadow-sm"><Icons.Search className="w-6 h-6 md:w-10 md:h-10" /></div>
                       <p className="text-gray-500 dark:text-gray-400 text-sm md:text-2xl font-medium">No projects in "{activeCategory}" yet.</p>
-                      <p className="text-xs md:text-base text-gray-400 dark:text-gray-500 mt-2">I am constantly updating my portfolio with new genre masterpieces.</p>
-                      <button 
-                        onClick={() => setActiveCategory('All')} 
-                        className="mt-6 md:mt-10 px-8 py-3 bg-white dark:bg-gray-800 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest shadow-md hover:shadow-lg transition-all border border-gray-100 dark:border-gray-700"
-                        style={{ color: content.general.brandColor }}
-                      >
-                        Explore all work
-                      </button>
+                      <button onClick={() => setActiveCategory('All')} className="mt-6 md:mt-10 px-8 py-3 bg-white dark:bg-gray-800 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest shadow-md hover:shadow-lg transition-all border border-gray-100 dark:border-gray-700" style={{ color: content.general.brandColor }}>Explore all work</button>
                     </div>
                   )}
                </div>
-               
                {(filteredProjects.length > 6 || (activeCategory !== 'All' && filteredProjects.length > 6)) && !isEditing && (
                    <div className="mt-8 md:mt-16 text-center reveal">
                         <Button 
@@ -700,12 +703,6 @@ const Home: React.FC = () => {
                    </div>
                )}
              </div>
-             <style>{`
-               .mask-fade {
-                 -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-                 mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-               }
-             `}</style>
           </section>
           </SectionWrapper>
         );
@@ -733,25 +730,12 @@ const Home: React.FC = () => {
                </div>
                
                <div className="relative group/carousel">
-                  <button 
-                    onClick={() => scrollTestimonials('left')}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 z-20 w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-premium flex items-center justify-center text-gray-600 dark:text-white hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/carousel:opacity-100 border border-gray-100 dark:border-gray-700"
-                    aria-label="Previous testimonial"
-                  >
-                     <Icons.ChevronLeft size={24} />
-                  </button>
-
-                  <div 
-                    ref={testimonialsRef}
-                    className="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-12 pt-4 px-4 -mx-4 no-scrollbar scroll-smooth"
-                  >
+                  <button onClick={() => scrollTestimonials('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 z-20 w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-premium flex items-center justify-center text-gray-600 dark:text-white hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/carousel:opacity-100 border border-gray-100 dark:border-gray-700"><Icons.ChevronLeft size={24} /></button>
+                  <div ref={testimonialsRef} className="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-12 pt-4 px-4 -mx-4 no-scrollbar scroll-smooth">
                     {visibleTestimonials.map((t, index) => {
                       const originalIndex = content.testimonials.findIndex(test => test.id === t.id);
                       return (
-                      <div 
-                        key={t.id} 
-                        className="snap-center flex-shrink-0 w-[85vw] md:w-[600px] lg:w-[700px] bg-gray-50 dark:bg-[#272727] p-8 md:p-12 lg:p-16 rounded-[2.5rem] shadow-soft hover:shadow-premium border-2 border-transparent hover:border-primary-500/10 dark:hover:bg-[#2d2d2d] hover:bg-white transition-all duration-500 flex flex-col md:flex-row items-center gap-8 md:gap-12"
-                      >
+                      <div key={t.id} className="snap-center flex-shrink-0 w-[85vw] md:w-[600px] lg:w-[700px] bg-gray-50 dark:bg-[#272727] p-8 md:p-12 lg:p-16 rounded-[2.5rem] shadow-soft hover:shadow-premium border-2 border-transparent hover:border-primary-500/10 dark:hover:bg-[#2d2d2d] hover:bg-white transition-all duration-500 flex flex-col md:flex-row items-center gap-8 md:gap-12">
                          <div className="flex-shrink-0 relative">
                            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full p-1.5 bg-gradient-to-br from-white to-gray-200 dark:from-gray-700 dark:to-gray-800 shadow-lg">
                               <EditableImage
@@ -765,39 +749,16 @@ const Home: React.FC = () => {
                            <div className="absolute -bottom-1 -right-1 bg-primary-500 text-white p-3 rounded-full shadow-lg" style={{ backgroundColor: content.general.brandColor }}><Icons.Quote size={16} fill="currentColor" /></div>
                          </div>
                          <div className="text-center md:text-left flex-1">
-                           <EditableText
-                              tag="p"
-                              path={`testimonials[${originalIndex}].content`}
-                              value={`"${t.content}"`}
-                              className="text-gray-700 dark:text-gray-300 text-lg md:text-xl leading-relaxed italic mb-6"
-                           />
+                           <EditableText tag="p" path={`testimonials[${originalIndex}].content`} value={`"${t.content}"`} className="text-gray-700 dark:text-gray-300 text-lg md:text-xl leading-relaxed italic mb-6" />
                            <div>
-                             <EditableText
-                                tag="h4"
-                                path={`testimonials[${originalIndex}].clientName`}
-                                value={t.clientName}
-                                className="font-heading font-bold text-xl text-gray-900 dark:text-white"
-                             />
-                             <EditableText
-                                tag="p"
-                                path={`testimonials[${originalIndex}].role`}
-                                value={t.role}
-                                className="text-xs font-black uppercase opacity-60 tracking-[0.2em] mt-1" 
-                                style={{ color: content.general.brandColor }}
-                             />
+                             <EditableText tag="h4" path={`testimonials[${originalIndex}].clientName`} value={t.clientName} className="font-heading font-bold text-xl text-gray-900 dark:text-white" />
+                             <EditableText tag="p" path={`testimonials[${originalIndex}].role`} value={t.role} className="text-xs font-black uppercase opacity-60 tracking-[0.2em] mt-1" style={{ color: content.general.brandColor }} />
                            </div>
                          </div>
                       </div>
                     );})}
                   </div>
-
-                  <button 
-                    onClick={() => scrollTestimonials('right')}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 z-20 w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-premium flex items-center justify-center text-gray-600 dark:text-white hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/carousel:opacity-100 border border-gray-100 dark:border-gray-700"
-                    aria-label="Next testimonial"
-                  >
-                     <Icons.ChevronRight size={24} />
-                  </button>
+                  <button onClick={() => scrollTestimonials('right')} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 z-20 w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-premium flex items-center justify-center text-gray-600 dark:text-white hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/carousel:opacity-100 border border-gray-100 dark:border-gray-700"><Icons.ChevronRight size={24} /></button>
                </div>
             </div>
           </section>
