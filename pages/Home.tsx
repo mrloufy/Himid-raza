@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import * as Icons from 'lucide-react';
 import { useContent } from '../context/SiteContext';
@@ -639,7 +640,7 @@ const Home: React.FC = () => {
                  )}
                </div>
                
-               <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-12 lg:gap-20 min-h-[200px] md:min-h-[500px]">
+               <div className="grid grid-cols-3 gap-2 md:gap-12 lg:gap-20 min-h-[200px] md:min-h-[500px]">
                   {visibleProjects.length > 0 ? (
                     visibleProjects.map((project, index) => {
                       const originalIndex = content.portfolio.findIndex(p => p.id === project.id);
@@ -691,7 +692,7 @@ const Home: React.FC = () => {
                     </div>
                   )}
                </div>
-               {(filteredProjects.length > 6 || (activeCategory !== 'All' && filteredProjects.length > 6)) && !isEditing && (
+               {baseProjects.length > 0 && !isEditing && (
                    <div className="mt-8 md:mt-16 text-center reveal">
                         <Button 
                             variant="primary" 

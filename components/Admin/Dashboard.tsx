@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useContent } from '../../context/SiteContext';
 import { SiteContent, AdminRole, SectionStyle, TypographyStyle } from '../../types';
 import Button from '../UI/Button';
@@ -287,10 +287,11 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
             <button onClick={() => setMobileMenuOpen(false)} className="md:hidden text-gray-400"><X size={20}/></button>
         </div>
         <nav className="p-4 space-y-4 overflow-y-auto h-[calc(100vh-120px)] no-scrollbar">
-           <button onClick={() => navigate('/admin/editor')} className="w-full flex items-center gap-3 px-4 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all group mb-4">
+           {/* Replaced button with Link for direct navigation and reliability */}
+           <Link to="/admin/editor" className="w-full flex items-center gap-3 px-4 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all group mb-4">
               <Wand2 size={20} className="animate-pulse" />
               <span>Edit Website</span>
-           </button>
+           </Link>
            {['Core', 'Content', 'System'].map(group => (
               <div key={group} className="pt-2">
                  <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{group}</p>
