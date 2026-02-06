@@ -36,9 +36,15 @@ const Footer: React.FC = () => {
         {/* Footer Main */}
         <div className="flex flex-col lg:flex-row justify-between items-start mb-24 reveal gap-16 lg:gap-0">
           <div className="max-w-md">
-            <Link to="/" className="text-4xl font-heading font-bold text-gray-900 dark:text-white mb-8 block transition-transform hover:scale-[1.02]">
-              <span className="text-gray-900 dark:text-white">{general.name.split(' ')[0]}</span>
-              <span className="text-primary-500" style={{ color: general.brandColor }}>{general.name.split(' ')[1] || ''}</span>
+            <Link to="/" className="mb-8 block transition-transform hover:scale-[1.02]">
+              {general.logoUrl ? (
+                <img src={general.logoUrl} alt={general.name} className="h-16 w-auto object-contain" />
+              ) : (
+                <div className="text-4xl font-heading font-bold text-gray-900 dark:text-white">
+                  <span className="text-gray-900 dark:text-white">{general.name.split(' ')[0]}</span>
+                  <span className="text-primary-500" style={{ color: general.brandColor }}>{general.name.split(' ')[1] || ''}</span>
+                </div>
+              )}
             </Link>
             <p className="text-gray-500 dark:text-gray-400 text-lg lg:text-xl leading-relaxed">
               {general.description}

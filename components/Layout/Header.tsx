@@ -54,7 +54,7 @@ const Header: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             {general.logoUrl ? (
-                <img src={general.logoUrl} alt={general.name} className="h-10 w-auto object-contain" />
+                <img src={general.logoUrl} alt={general.name} className="h-14 w-auto object-contain" />
             ) : (
                 <span className="text-2xl font-heading font-bold text-gray-900 dark:text-white tracking-tight">
                     {general.name}

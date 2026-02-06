@@ -8,10 +8,13 @@ const defaultSectionStyle = {
   isDark: false
 };
 
+// SVG data URI for Loufy Publisher Logo based on the provided image
+const LOUFY_LOGO_SVG = `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMjAwIDYwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMTAgNDhWMTBNMTUgNDhWMTBNMjAgNDhWMTBNMTQgNDhMMjUgNTVNMTQgNDhIMjUiIHN0cm9rZT0iI0ZGNkI0RSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHRleHQgeD0iNDAiIHk9IjM1IiBmaWxsPSIjRkY2QjRFIiBzdHlsZT0iZm9udC1mYW1pbHk6ICdQb3BwaW5zJywgc2Fucy1zZXJpZjsgZm9udC13ZWlnaHQ6IDgwMDsgZm9udC1zaXplOiAzMnB4OyBsZXR0ZXItc3BhY2luZzogMnB4OyI+TE9VRlk8L3RleHQ+Cjx0ZXh0IHg9IjQwIiB5PSI1MiIgZmlsbD0iI0ZGNkI0RSIgc3R5bGU9ImZvbnQtZmFtaWx5OiAnSW50ZXInLCBzYW5zLXNlcmlmOyBmb250LXdlaWdodDogNjAwOyBmb250LXNpemU6IDEycHg7IGxldHRlci1zcGFjaW5nOiA0cHg7Ij5QVUJMSVNIRVIuPC90ZXh0Pgo8L3N2Zz4=`;
+
 export const INITIAL_CONTENT: SiteContent = {
   general: {
-    name: "Hamid Raza",
-    logoUrl: "",
+    name: "LOUFY PUBLISHER.",
+    logoUrl: LOUFY_LOGO_SVG,
     heroGreeting: "Hi I am",
     title: "Amazon KDP Publishing Expert",
     description: "Helping authors publish, optimize, and sell books on Amazon with professional precision. From formatting to launch strategy, I turn your manuscript into a masterpiece.",
@@ -22,7 +25,7 @@ export const INITIAL_CONTENT: SiteContent = {
     linkedin: "https://linkedin.com/in/hamidraza",
     heroCtaText: "Hire Me",
     heroCtaLink: "#contact",
-    brandColor: "#FD6F00",
+    brandColor: "#FF6B4E",
     secondaryColor: "#111827",
     buttonStyle: 'rounded',
   },
@@ -61,7 +64,7 @@ export const INITIAL_CONTENT: SiteContent = {
     fontFamilyHeading: "'Poppins', sans-serif",
     fontFamilyBody: "'Inter', sans-serif",
     heroTitle: { fontSize: 72, fontWeight: "700", color: "#111827", textAlign: "left", letterSpacing: -2, lineHeight: 1.1 },
-    heroSubtitle: { fontSize: 24, fontWeight: "700", color: "#FD6F00", textAlign: "left", letterSpacing: 0, lineHeight: 1.2 },
+    heroSubtitle: { fontSize: 24, fontWeight: "700", color: "#FF6B4E", textAlign: "left", letterSpacing: 0, lineHeight: 1.2 },
     sectionTitle: { fontSize: 48, fontWeight: "700", color: "#111827", textAlign: "center", letterSpacing: -1, lineHeight: 1.2 },
     sectionSubtitle: { fontSize: 16, fontWeight: "400", color: "#4B5563", textAlign: "center", letterSpacing: 0, lineHeight: 1.6 },
     bodyText: { fontSize: 16, fontWeight: "400", color: "#4B5563", textAlign: "left", letterSpacing: 0, lineHeight: 1.6 }
@@ -145,6 +148,6 @@ export const INITIAL_CONTENT: SiteContent = {
     successMessage: "Thank you! I will get back to you within 24 hours.",
     enableSpamProtection: true
   },
-  advanced: { seo: { title: "Hamid Raza | Amazon KDP Expert", description: "Professional KDP publishing services for authors worldwide." } },
+  advanced: { seo: { title: "Loufy Publisher | Amazon KDP Expert", description: "Professional KDP publishing services for authors worldwide." } },
   adminSettings: { role: 'super_admin', isDraft: true }
 };
