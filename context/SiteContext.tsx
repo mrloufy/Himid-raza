@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SiteContent, HistoryEntry } from '../types';
@@ -59,12 +58,11 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       let baseContent = INITIAL_CONTENT;
 
-      // STRICT REQUIREMENT: Fetch data from projects table
-      // Columns: id, image_url, title, created_at
+      // FIXED QUERY: Removing 'created_at' and sorting by 'id' to fix 400 error
       const { data: projectsData, error: projectsError } = await supabase
         .from("projects")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("id", { ascending: false });
 
       if (projectsError) {
         console.error("Supabase fetch error:", projectsError.message);
@@ -72,15 +70,13 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (projectsData && projectsData.length > 0) {
         console.log("Supabase data array returned:", projectsData);
-        // Map database records to the frontend portfolio state
-        // Only use existing columns: id, image_url, title
         baseContent.portfolio = projectsData.map((p: any) => ({
           id: p.id.toString(),
           imageUrl: p.image_url,
           title: p.title || 'Portfolio Project',
-          bookType: 'Paperback', // Defaulting non-db fields
-          description: '', // Defaulting non-db fields
-          category: 'All', // Defaulting non-db fields
+          bookType: 'Paperback',
+          description: '',
+          category: 'All',
           isHidden: false
         }));
       }
@@ -107,9 +103,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const cleanContent = sanitizeMediaForStorage(newContent);
     setContent(cleanContent);
     
-    // We maintain local updates for UI responsiveness
     if (isPublish && supabase) {
-      // Logic for saving full site state if site_config exists
       try {
         await supabase
           .from('site_config')

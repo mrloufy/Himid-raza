@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { Upload, X, Scissors, AlertCircle, Loader2, Trash2 } from 'lucide-react';
@@ -101,15 +100,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
       console.log("Cloudinary Upload Success:", secureUrl);
 
       // PERSISTENCE: Save only secure_url to Supabase projects table
-      // Strict columns: image_url, title, created_at
+      // FIXED: Removed 'created_at' because it does not exist in the table schema
       const sb = (window as any).supabase;
       if (sb) {
         console.log("Persisting record to Supabase...");
         const client = sb.createClient(supabaseUrl, supabaseKey);
         const { error: sbError } = await client.from('projects').insert({
           image_url: secureUrl,
-          title: label || 'Uploaded Asset',
-          created_at: new Date().toISOString()
+          title: label || 'Uploaded Asset'
         });
 
         if (sbError) {
