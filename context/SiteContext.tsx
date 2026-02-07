@@ -1,8 +1,13 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
 import { SiteContent, HistoryEntry } from '../types';
 import { INITIAL_CONTENT } from '../constants';
+
+const SUPABASE_URL = 'https://tdmivcbzekatmboyvtce.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkbWl2Y2J6ZWthdG1ib3l2dGNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMjYzNzgsImV4cCI6MjA4NTkwMjM3OH0.lzqIaW6Dy3vru2b8uktVkCiKP7EOawrIvou9jmxA8KM';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 interface ContentContextType {
   content: SiteContent;
@@ -16,23 +21,13 @@ const SiteContext = createContext<ContentContextType | undefined>(undefined);
 
 const MAX_HISTORY = 5;
 
-/**
- * STRICT RULES ENFORCEMENT:
- * Recursively removes any base64 (data:) or Blob URLs from the content object.
- * This ensures browser storage never contains large media files.
- */
 const sanitizeMediaForStorage = (obj: any): any => {
   if (typeof obj !== 'object' || obj === null) return obj;
-  
-  if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeMediaForStorage(item));
-  }
-
+  if (Array.isArray(obj)) return obj.map(item => sanitizeMediaForStorage(item));
   const newObj: any = {};
   for (const key in obj) {
     let val = obj[key];
     if (typeof val === 'string' && (val.startsWith('data:') || val.startsWith('blob:'))) {
-      // Discard local references to enforce Cloudinary migration
       val = ""; 
     } else if (typeof val === 'object') {
       val = sanitizeMediaForStorage(val);
@@ -48,87 +43,65 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoaded, setIsLoaded] = useState(false);
   const location = useLocation();
 
-  const loadData = useCallback(() => {
-    const isAdmin = location.pathname.includes('/admin') || window.location.hash.includes('/admin');
-    
-    const savedLive = localStorage.getItem('siteContent_live');
-    const savedDraft = localStorage.getItem('siteContent_draft');
-    const savedHistory = localStorage.getItem('siteHistory');
-    
+  const loadData = useCallback(async () => {
+    // 1. Fetch main site configuration
+    const { data: configData, error: configError } = await supabase
+      .from('site_config')
+      .select('content')
+      .eq('id', 'main')
+      .single();
+
     let baseContent = INITIAL_CONTENT;
-
-    if (savedLive) {
-      try {
-        baseContent = sanitizeMediaForStorage(JSON.parse(savedLive));
-      } catch (e) {
-        console.error("Failed to parse live content", e);
-      }
+    if (configData?.content) {
+      baseContent = configData.content;
     }
 
-    if (isAdmin && savedDraft) {
-      try {
-        baseContent = sanitizeMediaForStorage(JSON.parse(savedDraft));
-      } catch (e) {
-        console.error("Failed to parse draft content", e);
-      }
+    // 2. Fetch portfolio from 'projects' table as per strict requirement
+    const { data: projectsData, error: projectsError } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (projectsData && projectsData.length > 0) {
+      // Map Supabase 'projects' to our 'SiteContent.portfolio'
+      // We prioritize database projects to ensure "Images must appear on all devices"
+      baseContent.portfolio = projectsData.map(p => ({
+        id: p.id.toString(),
+        image_url: p.image_url, // Backward compatibility for some components
+        imageUrl: p.image_url,
+        title: p.title || 'Portfolio Project',
+        bookType: p.book_type || 'Paperback',
+        description: p.description || '',
+        category: p.category || 'All',
+        isHidden: false
+      }));
     }
-    
+
     setContent(baseContent);
-    
-    if (savedHistory) {
-      try {
-        setHistory(JSON.parse(savedHistory).slice(0, MAX_HISTORY));
-      } catch (e) {}
-    }
-    
     setIsLoaded(true);
-  }, [location.pathname]);
+  }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'siteContent_live' || e.key === 'siteContent_draft') {
-        loadData();
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [loadData]);
-
-  const updateContent = (newContent: SiteContent, isPublish: boolean = false) => {
-    // Sanitize content before any form of storage persistence
+  const updateContent = async (newContent: SiteContent, isPublish: boolean = false) => {
     const cleanContent = sanitizeMediaForStorage(newContent);
-    
     setContent(cleanContent);
     
-    const saveData = (key: string, data: any) => {
-      try {
-        // Double check: Never store base64 in local storage
-        const sanitizedData = sanitizeMediaForStorage(data);
-        localStorage.setItem(key, JSON.stringify(sanitizedData));
-      } catch (error: any) {
-        console.error("Storage Error:", error);
-        localStorage.removeItem('siteHistory');
-      }
-    };
-    
-    saveData('siteContent_draft', cleanContent);
+    // Save draft locally for speed, but sync to Supabase for persistence
+    localStorage.setItem('siteContent_draft', JSON.stringify(cleanContent));
     
     if (isPublish) {
-      saveData('siteContent_live', cleanContent);
-      
-      const entry: HistoryEntry = {
-        id: Date.now().toString(),
-        timestamp: Date.now(),
-        label: `Published: ${new Date().toLocaleString()}`,
-        content: JSON.stringify(cleanContent)
-      };
-      const newHistory = [entry, ...history].slice(0, MAX_HISTORY);
-      setHistory(newHistory);
-      saveData('siteHistory', newHistory);
+      // Sync the entire configuration state to 'site_config' table
+      const { error } = await supabase
+        .from('site_config')
+        .upsert({ id: 'main', content: cleanContent, updated_at: new Date().toISOString() });
+
+      if (error && error.code === 'PGRST116') {
+        // Table might not exist yet in fresh project, handle gracefully if necessary
+        console.error("Supabase Save Error: Ensure 'site_config' table exists with columns 'id' and 'content'.", error);
+      }
     }
   };
 
@@ -138,7 +111,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       try {
         const restored = sanitizeMediaForStorage(JSON.parse(entry.content));
         setContent(restored);
-        localStorage.setItem('siteContent_draft', JSON.stringify(restored));
+        updateContent(restored, false);
       } catch (e) {
         console.error("Failed to restore version", e);
       }
@@ -146,11 +119,9 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const resetContent = () => {
-    if (window.confirm("CRITICAL: Reset all site content to defaults? This will clear all Cloudinary links in your draft.")) {
-      localStorage.removeItem('siteContent_draft');
-      localStorage.removeItem('siteContent_live');
-      localStorage.removeItem('siteHistory');
-      window.location.reload();
+    if (window.confirm("CRITICAL: Reset all site content to defaults? This will clear all data in Supabase.")) {
+      setContent(INITIAL_CONTENT);
+      updateContent(INITIAL_CONTENT, true);
     }
   };
 

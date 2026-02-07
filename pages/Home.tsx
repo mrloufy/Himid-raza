@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import * as Icons from 'lucide-react';
 import { useContent } from '../context/SiteContext';
@@ -218,7 +217,7 @@ const Home: React.FC = () => {
                        <Button 
                         variant="outline" 
                         size="lg" 
-                        className={`px-12 rounded-xl hover-lift ${content.general.buttonStyle === 'pill' ? 'rounded-full' : content.general.buttonStyle === 'square' ? 'rounded-none' : ''}`}
+                        className={`px-12 rounded-xl hover-lift shadow-glow ${content.general.buttonStyle === 'pill' ? 'rounded-full' : content.general.buttonStyle === 'square' ? 'rounded-none' : ''}`}
                         onClick={() => !isEditing && document.getElementById('portfolio')?.scrollIntoView({behavior:'smooth'})}
                         style={{ borderColor: content.general.brandColor, color: content.general.brandColor }}
                        >
