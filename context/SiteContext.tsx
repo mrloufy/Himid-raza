@@ -14,8 +14,33 @@ interface ContentContextType {
 
 const SiteContext = createContext<ContentContextType | undefined>(undefined);
 
-// Reduced history limit to save storage space
 const MAX_HISTORY = 5;
+
+/**
+ * STRICT RULES ENFORCEMENT:
+ * Recursively removes any base64 (data:) or Blob URLs from the content object.
+ * This ensures browser storage never contains large media files.
+ */
+const sanitizeMediaForStorage = (obj: any): any => {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeMediaForStorage(item));
+  }
+
+  const newObj: any = {};
+  for (const key in obj) {
+    let val = obj[key];
+    if (typeof val === 'string' && (val.startsWith('data:') || val.startsWith('blob:'))) {
+      // Discard local references to enforce Cloudinary migration
+      val = ""; 
+    } else if (typeof val === 'object') {
+      val = sanitizeMediaForStorage(val);
+    }
+    newObj[key] = val;
+  }
+  return newObj;
+};
 
 export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [content, setContent] = useState<SiteContent>(INITIAL_CONTENT);
@@ -24,7 +49,6 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const location = useLocation();
 
   const loadData = useCallback(() => {
-    // Detect if we are in admin mode based on current route
     const isAdmin = location.pathname.includes('/admin') || window.location.hash.includes('/admin');
     
     const savedLive = localStorage.getItem('siteContent_live');
@@ -33,20 +57,17 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     let baseContent = INITIAL_CONTENT;
 
-    // Default to Live content for the site
     if (savedLive) {
       try {
-        baseContent = JSON.parse(savedLive);
+        baseContent = sanitizeMediaForStorage(JSON.parse(savedLive));
       } catch (e) {
         console.error("Failed to parse live content", e);
       }
     }
 
-    // Admin view should prioritize the Draft content for editing
     if (isAdmin && savedDraft) {
       try {
-        const draft = JSON.parse(savedDraft);
-        baseContent = draft;
+        baseContent = sanitizeMediaForStorage(JSON.parse(savedDraft));
       } catch (e) {
         console.error("Failed to parse draft content", e);
       }
@@ -63,12 +84,10 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoaded(true);
   }, [location.pathname]);
 
-  // Load data on mount and whenever the path changes
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Handle storage events for multi-tab sync
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === 'siteContent_live' || e.key === 'siteContent_draft') {
@@ -80,44 +99,32 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [loadData]);
 
   const updateContent = (newContent: SiteContent, isPublish: boolean = false) => {
-    // 1. Immediate UI Update
-    setContent(newContent);
+    // Sanitize content before any form of storage persistence
+    const cleanContent = sanitizeMediaForStorage(newContent);
+    
+    setContent(cleanContent);
     
     const saveData = (key: string, data: any) => {
       try {
-        localStorage.setItem(key, JSON.stringify(data));
+        // Double check: Never store base64 in local storage
+        const sanitizedData = sanitizeMediaForStorage(data);
+        localStorage.setItem(key, JSON.stringify(sanitizedData));
       } catch (error: any) {
-        if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-          console.warn("Storage quota reached. Purging older history to make space...");
-          // Try to clear history to free space
-          localStorage.removeItem('siteHistory');
-          setHistory([]);
-          // Try saving the data again after clearing history
-          try {
-             localStorage.setItem(key, JSON.stringify(data));
-          } catch (retryError) {
-             console.error("Critical Storage Error: Space still insufficient even after history purge.");
-             alert("Storage Error: Your browser storage is full. Please delete some projects or optimize your images further.");
-          }
-        } else {
-          console.error("Storage Error:", error);
-        }
+        console.error("Storage Error:", error);
+        localStorage.removeItem('siteHistory');
       }
     };
     
-    // 2. Persist to Draft (always)
-    saveData('siteContent_draft', newContent);
+    saveData('siteContent_draft', cleanContent);
     
-    // 3. If Publishing, Persist to Live site storage
     if (isPublish) {
-      saveData('siteContent_live', newContent);
+      saveData('siteContent_live', cleanContent);
       
-      // Add to history
       const entry: HistoryEntry = {
         id: Date.now().toString(),
         timestamp: Date.now(),
         label: `Published: ${new Date().toLocaleString()}`,
-        content: JSON.stringify(newContent)
+        content: JSON.stringify(cleanContent)
       };
       const newHistory = [entry, ...history].slice(0, MAX_HISTORY);
       setHistory(newHistory);
@@ -129,9 +136,9 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const entry = history.find(h => h.id === id);
     if (entry) {
       try {
-        const restored = JSON.parse(entry.content);
+        const restored = sanitizeMediaForStorage(JSON.parse(entry.content));
         setContent(restored);
-        localStorage.setItem('siteContent_draft', entry.content);
+        localStorage.setItem('siteContent_draft', JSON.stringify(restored));
       } catch (e) {
         console.error("Failed to restore version", e);
       }
@@ -139,8 +146,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const resetContent = () => {
-    if (window.confirm("CRITICAL: Reset all site content to defaults? This cannot be undone.")) {
-      setContent(INITIAL_CONTENT);
+    if (window.confirm("CRITICAL: Reset all site content to defaults? This will clear all Cloudinary links in your draft.")) {
       localStorage.removeItem('siteContent_draft');
       localStorage.removeItem('siteContent_live');
       localStorage.removeItem('siteHistory');

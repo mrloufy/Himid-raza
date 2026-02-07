@@ -1,7 +1,19 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+
+// One-time cleanup for Cloudinary migration
+const CLOUDINARY_CLEANUP_KEY = 'cloudinary_migration_v1';
+if (!localStorage.getItem(CLOUDINARY_CLEANUP_KEY)) {
+  // Clear all old storage to remove base64 media and free up quota
+  localStorage.clear();
+  sessionStorage.clear();
+  // Mark cleanup as done
+  localStorage.setItem(CLOUDINARY_CLEANUP_KEY, 'true');
+  console.log('Cloudinary Migration: Browser storage cleaned.');
+}
 
 const rootElement = document.getElementById('root');
 
