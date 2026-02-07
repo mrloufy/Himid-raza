@@ -54,7 +54,7 @@ async function getCroppedImg(
   const outputType = (mimeType === 'image/png' || mimeType === 'image/webp') ? mimeType : 'image/jpeg';
   const quality = outputType === 'image/jpeg' ? 0.7 : 0.8;
 
-  const MAX_HEIGHT = 1200; 
+  const MAX_HEIGHT = 1600; 
   if (canvas.height > MAX_HEIGHT) {
     const scale = MAX_HEIGHT / canvas.height;
     const newHeight = MAX_HEIGHT;
@@ -73,7 +73,7 @@ async function getCroppedImg(
   return canvas.toDataURL(outputType, quality);
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChange, label = "Image", aspect = 2/3 }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChange, label = "Image", aspect }) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('image/jpeg');
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -116,7 +116,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
       try {
         const croppedBase64 = await getCroppedImg(imageSrc, croppedAreaPixels, mimeType);
         if (croppedBase64) {
-          // Upload to Cloudinary
           const formData = new FormData();
           formData.append('file', croppedBase64);
           formData.append('upload_preset', UPLOAD_PRESET);
@@ -145,19 +144,24 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
     }
   };
 
-  const ratioLabel = aspect === 2/3 ? "2:3 (Vertical)" : "1:1 (Square)";
+  const getRatioLabel = () => {
+    if (!aspect) return "Free Aspect";
+    if (Math.abs(aspect - 2/3) < 0.01) return "2:3 (Book Cover)";
+    if (Math.abs(aspect - 1) < 0.01) return "1:1 (Square)";
+    return "Fixed Ratio";
+  };
 
   return (
     <div className="w-full">
       <div className="flex justify-between items-end mb-2">
         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</label>
-        <span className="text-[9px] font-bold text-primary-500 bg-primary-50 dark:bg-primary-900/20 px-2 py-0.5 rounded uppercase">Ratio: {ratioLabel}</span>
+        <span className="text-[9px] font-bold text-primary-500 bg-primary-50 dark:bg-primary-900/20 px-2 py-0.5 rounded uppercase">{getRatioLabel()}</span>
       </div>
       
       <div className="flex flex-col gap-3">
         <div 
           className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center group hover:border-primary-300 transition-colors"
-          style={{ aspectRatio: aspect }}
+          style={{ aspectRatio: aspect || 16/9 }}
         >
           {currentImage ? (
             <>
@@ -180,8 +184,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
             <div className="flex flex-col items-center gap-3 text-gray-400">
               <Upload size={32} className="opacity-50"/>
               <div className="text-center px-4">
-                <span className="text-[10px] font-black uppercase tracking-wider block">Upload & Attach to Cloudinary</span>
-                <span className="text-[9px] font-bold text-gray-500">Auto-stored on Cloudinary</span>
+                <span className="text-[10px] font-black uppercase tracking-wider block">Upload Image</span>
+                <span className="text-[9px] font-bold text-gray-500">Attach to Cloudinary</span>
               </div>
             </div>
           )}
@@ -189,21 +193,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
         </div>
         
         {error && <p className="text-[10px] text-red-500 font-bold flex items-center gap-1"><AlertCircle size={10}/> {error}</p>}
-        
-        {!currentImage && !error && (
-            <p className="text-[9px] text-gray-400 flex items-center gap-1 italic"><Info size={10}/> Media will be hosted securely on Cloudinary.</p>
-        )}
       </div>
 
       {isCropping && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 md:p-8 backdrop-blur-md">
+        <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 md:p-8 backdrop-blur-md">
            <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800">
               <div className="p-8 flex justify-between items-center border-b dark:border-gray-800">
                  <div>
                     <h3 className="font-bold flex items-center gap-2 dark:text-white text-xl">
                       <Scissors size={20} className="text-primary-500"/> Finalize Asset
                     </h3>
-                    <p className="text-xs text-gray-500 mt-1">Images are uploaded directly to Cloudinary Media Library.</p>
+                    <p className="text-xs text-gray-500 mt-1">Adjust and upload to Cloudinary.</p>
                  </div>
                  <button type="button" onClick={() => { setIsCropping(false); setImageSrc(null); }} className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" disabled={isProcessing}><X size={24}/></button>
               </div>
@@ -239,10 +239,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
                  <div className="flex gap-4">
                     <Button type="button" variant="outline" onClick={() => { setIsCropping(false); setImageSrc(null); }} className="flex-1 py-5 rounded-2xl font-bold" disabled={isProcessing}>Cancel</Button>
                     <Button type="button" onClick={showCroppedImage} className="flex-[2] py-5 rounded-2xl font-bold shadow-glow" disabled={isProcessing}>
-                        {isProcessing ? <><Loader2 size={20} className="animate-spin mr-2"/> Uploading to Cloudinary...</> : 'Upload to Cloudinary'}
+                        {isProcessing ? <><Loader2 size={20} className="animate-spin mr-2"/> Uploading...</> : 'Upload to Cloudinary'}
                     </Button>
                  </div>
-                 {error && <p className="text-xs text-red-500 text-center font-bold">{error}</p>}
               </div>
            </div>
         </div>

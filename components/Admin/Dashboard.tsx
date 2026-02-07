@@ -287,7 +287,6 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
             <button onClick={() => setMobileMenuOpen(false)} className="md:hidden text-gray-400"><X size={20}/></button>
         </div>
         <nav className="p-4 space-y-4 overflow-y-auto h-[calc(100vh-120px)] no-scrollbar">
-           {/* Replaced button with Link for direct navigation and reliability */}
            <Link to="/admin/editor" className="w-full flex items-center gap-3 px-4 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all group mb-4">
               <Wand2 size={20} className="animate-pulse" />
               <span>Edit Website</span>
@@ -351,12 +350,12 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                {activeTab === 'general' && (
                   <div className="space-y-12">
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                        <ImageUploader currentImage={localContent.general.logoUrl} onImageChange={(url) => setLocalContent(prev => ({...prev, general: {...prev.general, logoUrl: url}}))} label="Logo" aspect={3} />
-                        <ImageUploader currentImage={localContent.general.heroImage} onImageChange={(url) => setLocalContent(prev => ({...prev, general: {...prev.general, heroImage: url}}))} label="Main Hero Image" aspect={16/9} />
-                        <ImageUploader currentImage={localContent.general.aboutImage} onImageChange={(url) => setLocalContent(prev => ({...prev, general: {...prev.general, aboutImage: url}}))} label="About Me Portrait" aspect={2/3} />
+                        {/* Free aspect for logo and general branding assets */}
+                        <ImageUploader currentImage={localContent.general.logoUrl} onImageChange={(url) => setLocalContent(prev => ({...prev, general: {...prev.general, logoUrl: url}}))} label="Logo" />
+                        <ImageUploader currentImage={localContent.general.heroImage} onImageChange={(url) => setLocalContent(prev => ({...prev, general: {...prev.general, heroImage: url}}))} label="Main Hero Image" />
+                        <ImageUploader currentImage={localContent.general.aboutImage} onImageChange={(url) => setLocalContent(prev => ({...prev, general: {...prev.general, aboutImage: url}}))} label="About Me Portrait" />
                      </div>
                      <div className="pt-10 border-t dark:border-gray-800 space-y-10">
-                        {/* Branding */}
                         <section>
                            <h3 className="font-bold text-lg dark:text-white mb-6 flex items-center gap-2"><Layout size={18} className="text-gray-400"/> General Branding</h3>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -368,7 +367,6 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                            </div>
                         </section>
 
-                        {/* Contact Info */}
                         <section className="pt-10 border-t dark:border-gray-800">
                            <h3 className="font-bold text-lg dark:text-white mb-6 flex items-center gap-2"><Mail size={18} className="text-gray-400"/> Contact Information</h3>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -377,7 +375,6 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                            </div>
                         </section>
 
-                        {/* Social Links */}
                         <section className="pt-10 border-t dark:border-gray-800">
                            <h3 className="font-bold text-lg dark:text-white mb-6 flex items-center gap-2"><Share2 size={18} className="text-gray-400"/> Social Profiles</h3>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -389,7 +386,6 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                   </div>
                )}
 
-               {/* ... (rest of the component remains unchanged) ... */}
                {activeTab === 'typography' && (
                   <div className="space-y-4">
                      <TypographyBlock title="Hero Title (Main)" typoKey="heroTitle" />
@@ -446,7 +442,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                      <SectionSettingsEditor sectionKey="portfolio" localContent={localContent} isReadOnly={isReadOnly} onSectionStyleChange={handleSectionStyleChange} />
                      <SectionHeaderEditor sectionKey="portfolio" localContent={localContent} isReadOnly={isReadOnly} onHeaderChange={handleHeaderChange} />
                      <div className="flex justify-between items-center mb-6">
-                        <div><h3 className="font-bold text-lg dark:text-white">Project Case Studies</h3><p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Vertical image (2:3 ratio required)</p></div>
+                        <div><h3 className="font-bold text-lg dark:text-white">Project Case Studies</h3><p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Book covers must follow 2:3 ratio</p></div>
                         <Button type="button" onClick={() => addItem('portfolio')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Project</Button>
                      </div>
                      <div className="grid gap-8">
@@ -458,7 +454,8 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               </div>
                               {item.isHidden && <span className="absolute top-6 left-6 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-widest">Hidden</span>}
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                                 <ImageUploader currentImage={item.imageUrl} onImageChange={(url) => updateItemField('portfolio', item.id, 'imageUrl', url)} label="Vertical image (2:3 ratio required)" aspect={2/3} />
+                                 {/* MANDATORY: Keeping 2:3 ratio for portfolio projects as requested */}
+                                 <ImageUploader currentImage={item.imageUrl} onImageChange={(url) => updateItemField('portfolio', item.id, 'imageUrl', url)} label="Book Cover" aspect={2/3} />
                                  <div className="md:col-span-2 space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                        <div><label className="label">Book Title</label><input value={item.title} onChange={(e) => updateItemField('portfolio', item.id, 'title', e.target.value)} className="input-field" disabled={isReadOnly} /></div>
@@ -479,7 +476,7 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                      <SectionSettingsEditor sectionKey="kdpCategories" localContent={localContent} isReadOnly={isReadOnly} onSectionStyleChange={handleSectionStyleChange} />
                      <SectionHeaderEditor sectionKey="kdpCategories" localContent={localContent} isReadOnly={isReadOnly} onHeaderChange={handleHeaderChange} />
                      <div className="flex justify-between items-center mb-6">
-                        <div><h3 className="font-bold text-lg dark:text-white">Genre Specialties</h3><p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Vertical image (2:3 ratio required)</p></div>
+                        <div><h3 className="font-bold text-lg dark:text-white">Genre Specialties</h3><p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Covers follow 2:3 ratio</p></div>
                         <Button type="button" onClick={() => addItem('kdpCategories')} variant="secondary" size="sm" disabled={isReadOnly} className="rounded-xl"><Plus size={16} className="mr-2"/> Add Category</Button>
                      </div>
                      <div className="grid gap-6">
@@ -491,7 +488,8 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               </div>
                               {item.isHidden && <span className="absolute top-6 left-6 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-widest">Hidden</span>}
                               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                                 <div className="md:col-span-1"><ImageUploader currentImage={item.imageUrl} onImageChange={(url) => updateItemField('kdpCategories', item.id, 'imageUrl', url)} label="Vertical image (2:3 ratio required)" aspect={2/3} /></div>
+                                 {/* MANDATORY: Keeping 2:3 ratio for KDP categories as requested */}
+                                 <div className="md:col-span-1"><ImageUploader currentImage={item.imageUrl} onImageChange={(url) => updateItemField('kdpCategories', item.id, 'imageUrl', url)} label="Genre Cover" aspect={2/3} /></div>
                                  <div className="md:col-span-3 space-y-6">
                                     <div><label className="label">Category Title</label><input value={item.title} onChange={(e) => updateItemField('kdpCategories', item.id, 'title', e.target.value)} className="input-field" disabled={isReadOnly} /></div>
                                     <div><label className="label">Description Text</label><textarea value={item.description} onChange={(e) => updateItemField('kdpCategories', item.id, 'description', e.target.value)} className="input-field h-20" disabled={isReadOnly} /></div>
@@ -517,7 +515,8 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               </div>
                               {item.isHidden && <span className="absolute top-6 left-6 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-widest">Hidden</span>}
                               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                                 <div className="md:col-span-1"><ImageUploader currentImage={item.imageUrl} onImageChange={(url) => updateItemField('promotions', item.id, 'imageUrl', url)} label="Vertical image (2:3 ratio required)" aspect={2/3} /></div>
+                                 {/* Free aspect for promotional banners/images */}
+                                 <div className="md:col-span-1"><ImageUploader currentImage={item.imageUrl} onImageChange={(url) => updateItemField('promotions', item.id, 'imageUrl', url)} label="Promo Banner" /></div>
                                  <div className="md:col-span-3 space-y-6">
                                     <div><label className="label">Promotion Title</label><input value={item.title} onChange={(e) => updateItemField('promotions', item.id, 'title', e.target.value)} className="input-field" disabled={isReadOnly} /></div>
                                     <div><label className="label">Deal Mechanics / Details</label><textarea value={item.description} onChange={(e) => updateItemField('promotions', item.id, 'description', e.target.value)} className="input-field h-24" disabled={isReadOnly} /></div>
@@ -543,7 +542,8 @@ const Dashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                               </div>
                               {item.isHidden && <span className="absolute top-6 left-6 px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-500 rounded-full text-[10px] font-black uppercase tracking-widest">Hidden</span>}
                               <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-                                 <div className="md:col-span-1"><ImageUploader currentImage={item.avatarUrl} onImageChange={(url) => updateItemField('testimonials', item.id, 'avatarUrl', url)} label="Client Photo" aspect={1} /></div>
+                                 {/* Free aspect for client photos */}
+                                 <div className="md:col-span-1"><ImageUploader currentImage={item.avatarUrl} onImageChange={(url) => updateItemField('testimonials', item.id, 'avatarUrl', url)} label="Client Photo" /></div>
                                  <div className="md:col-span-3 space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                        <div><label className="label">Client Name</label><input value={item.clientName} onChange={(e) => updateItemField('testimonials', item.id, 'clientName', e.target.value)} className="input-field" disabled={isReadOnly} /></div>

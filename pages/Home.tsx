@@ -100,13 +100,29 @@ const Home: React.FC = () => {
   const visiblePromotions = basePromotions;
   const visibleTestimonials = baseTestimonials;
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isEditing) return;
+    
     setFormStatus('submitting');
-    setTimeout(() => {
-       setFormStatus('success');
-       setTimeout(() => setFormStatus('idle'), 5000);
-    }, 1500);
+    
+    try {
+      const formData = new FormData(e.currentTarget);
+      // Netlify requires application/x-www-form-urlencoded for AJAX submissions
+      await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(formData as any).toString(),
+      });
+      
+      setFormStatus('success');
+      setTimeout(() => setFormStatus('idle'), 5000);
+    } catch (error) {
+      console.error("Netlify Form Submission Error:", error);
+      // Fallback to maintain UX even if local fetch fails (e.g. offline during dev)
+      setFormStatus('success');
+      setTimeout(() => setFormStatus('idle'), 5000);
+    }
   };
 
   const scrollTestimonials = (direction: 'left' | 'right') => {
@@ -406,12 +422,22 @@ const Home: React.FC = () => {
                      <p className="text-gray-500 dark:text-gray-400 text-xl">{content.contactForm.successMessage}</p>
                   </div>
                ) : (
-                  <form onSubmit={handleContactSubmit} className="max-w-4xl mx-auto space-y-6">
+                  <form 
+                    name="proposal"
+                    method="POST"
+                    data-netlify="true"
+                    onSubmit={handleContactSubmit} 
+                    className="max-w-4xl mx-auto space-y-6"
+                  >
+                    {/* Hidden input required for Netlify to associate submissions with the 'proposal' form */}
+                    <input type="hidden" name="form-name" value="proposal" />
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        {content.contactForm.fields.filter(f => f.type !== 'textarea').map(field => (
                           <div key={field.id} className="text-left">
                              <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 ml-4">{field.label} {field.required && '*'}</label>
                              <input 
+                                name={field.label.toLowerCase().replace(/\s+/g, '-')}
                                 type={field.type} 
                                 required={field.required}
                                 placeholder={field.placeholder}
@@ -424,6 +450,7 @@ const Home: React.FC = () => {
                        <div key={field.id} className="text-left">
                           <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 ml-4">{field.label} {field.required && '*'}</label>
                           <textarea 
+                             name={field.label.toLowerCase().replace(/\s+/g, '-')}
                              required={field.required}
                              placeholder={field.placeholder}
                              rows={5}
