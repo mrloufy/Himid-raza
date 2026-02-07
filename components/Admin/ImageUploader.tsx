@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { Upload, X, Scissors, AlertCircle, Loader2, Trash2 } from 'lucide-react';
@@ -99,10 +100,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
       const secureUrl = data.secure_url;
       console.log("Cloudinary Upload Success:", secureUrl);
 
-      // PERSISTENCE: Save only secure_url to Supabase
+      // PERSISTENCE: Save only secure_url to Supabase projects table
+      // Strict columns: image_url, title, created_at
       const sb = (window as any).supabase;
       if (sb) {
-        console.log("Inserting record into Supabase projects table...");
+        console.log("Persisting record to Supabase...");
         const client = sb.createClient(supabaseUrl, supabaseKey);
         const { error: sbError } = await client.from('projects').insert({
           image_url: secureUrl,
@@ -111,10 +113,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
         });
 
         if (sbError) {
-          console.error("Supabase Insertion Error:", sbError);
-          throw new Error("Cloudinary worked but Supabase failed: " + sbError.message);
+          console.error("Supabase Insertion Error:", sbError.message);
+          throw new Error("Supabase persistence failed: " + sbError.message);
         }
-        console.log("Supabase Insertion Success.");
       }
 
       onImageChange(secureUrl);

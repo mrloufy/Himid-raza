@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SiteContent, HistoryEntry } from '../types';
@@ -7,7 +8,6 @@ import { INITIAL_CONTENT } from '../constants';
 const supabaseUrl = "https://tdmivcbzekatmboyvtce.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkbWl2Y2J6ZWthdG1ib3l2dGNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMjYzNzgsImV4cCI6MjA4NTkwMjM3OH0.lzqIaW6Dy3vru2b8uktVkCiKP7EOawrIvou9jmxA8KM";
 
-// Use global supabase from window if available, fallback to nothing (expect it to be there)
 let supabase: any;
 
 interface ContentContextType {
@@ -41,14 +41,12 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Initialize Supabase once
   useEffect(() => {
     const initSupabase = () => {
       if ((window as any).supabase) {
         supabase = (window as any).supabase.createClient(supabaseUrl, supabaseKey);
         console.log("SUPABASE CONNECTED AND RUNNING");
       } else {
-        // Retry a few times if the script is still loading
         setTimeout(initSupabase, 500);
       }
     };
@@ -59,38 +57,30 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!supabase) return;
 
     try {
-      // 1. Fetch main site configuration from site_config if it exists
-      const { data: configData } = await supabase
-        .from('site_config')
-        .select('content')
-        .eq('id', 'main')
-        .single();
-
       let baseContent = INITIAL_CONTENT;
-      if (configData?.content) {
-        baseContent = configData.content;
-      }
 
-      // 2. Fetch projects from 'projects' table (Mandatory persistence source)
-      const { data: projectsData, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // STRICT REQUIREMENT: Fetch data from projects table
+      // Columns: id, image_url, title, created_at
+      const { data: projectsData, error: projectsError } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Supabase projects fetch error:", error);
+      if (projectsError) {
+        console.error("Supabase fetch error:", projectsError.message);
       }
 
       if (projectsData && projectsData.length > 0) {
-        console.log(`Fetched ${projectsData.length} projects from Supabase`);
-        // Map database projects to the portfolio state
+        console.log("Supabase data array returned:", projectsData);
+        // Map database records to the frontend portfolio state
+        // Only use existing columns: id, image_url, title
         baseContent.portfolio = projectsData.map((p: any) => ({
           id: p.id.toString(),
           imageUrl: p.image_url,
           title: p.title || 'Portfolio Project',
-          bookType: p.book_type || 'Paperback',
-          description: p.description || '',
-          category: p.category || 'All',
+          bookType: 'Paperback', // Defaulting non-db fields
+          description: '', // Defaulting non-db fields
+          category: 'All', // Defaulting non-db fields
           isHidden: false
         }));
       }
@@ -98,13 +88,12 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setContent(baseContent);
       setIsLoaded(true);
     } catch (err) {
-      console.error("Site data load error:", err);
-      setIsLoaded(true); // Don't block UI forever
+      console.error("Data load failure:", err);
+      setIsLoaded(true);
     }
   }, []);
 
   useEffect(() => {
-    // Wait for supabase to be initialized then load
     const interval = setInterval(() => {
       if (supabase) {
         loadData();
@@ -118,11 +107,16 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const cleanContent = sanitizeMediaForStorage(newContent);
     setContent(cleanContent);
     
+    // We maintain local updates for UI responsiveness
     if (isPublish && supabase) {
-      console.log("Publishing content to Supabase...");
-      await supabase
-        .from('site_config')
-        .upsert({ id: 'main', content: cleanContent, updated_at: new Date().toISOString() });
+      // Logic for saving full site state if site_config exists
+      try {
+        await supabase
+          .from('site_config')
+          .upsert({ id: 'main', content: cleanContent, updated_at: new Date().toISOString() });
+      } catch (e) {
+        console.warn("site_config table not found, skipping full state sync.");
+      }
     }
   };
 
