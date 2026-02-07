@@ -1,12 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
-import { createClient } from '@supabase/supabase-js';
-import { Upload, X, Scissors, AlertCircle, Loader2, Info, Trash2 } from 'lucide-react';
+import { Upload, X, Scissors, AlertCircle, Loader2, Trash2 } from 'lucide-react';
 import Button from '../UI/Button';
 
-const SUPABASE_URL = 'https://tdmivcbzekatmboyvtce.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkbWl2Y2J6ZWthdG1ib3l2dGNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMjYzNzgsImV4cCI6MjA4NTkwMjM3OH0.lzqIaW6Dy3vru2b8uktVkCiKP7EOawrIvou9jmxA8KM';
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Global Supabase access from window
+const supabaseUrl = "https://tdmivcbzekatmboyvtce.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkbWl2Y2J6ZWthdG1ib3l2dGNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMjYzNzgsImV4cCI6MjA4NTkwMjM3OH0.lzqIaW6Dy3vru2b8uktVkCiKP7EOawrIvou9jmxA8KM";
+
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dtr3yvjac/upload';
+const UPLOAD_PRESET = 'Hamid_Raza';
 
 interface ImageUploaderProps {
   currentImage?: string;
@@ -14,9 +16,6 @@ interface ImageUploaderProps {
   label?: string;
   aspect?: number;
 }
-
-const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dtr3yvjac/upload';
-const UPLOAD_PRESET = 'Hamid_Raza';
 
 const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
@@ -80,28 +79,42 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
     if (!imageSrc || !croppedAreaPixels) return;
     setIsProcessing(true);
     setError(null);
+
     try {
       const croppedBase64 = await getCroppedImg(imageSrc, croppedAreaPixels);
       if (!croppedBase64) throw new Error("Failed to process crop.");
+
+      console.log("Starting Cloudinary Upload...");
       const formData = new FormData();
       formData.append('file', croppedBase64);
       formData.append('upload_preset', UPLOAD_PRESET);
+      
       const response = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error?.message || 'Cloudinary upload failed');
       }
+      
       const data = await response.json();
       const secureUrl = data.secure_url;
-      
-      // PERSISTENCE: Save to Supabase projects table as per strict requirements
-      // We only insert if this uploader is being used for a portfolio/project context
-      if (label.toLowerCase().includes('book') || label.toLowerCase().includes('project')) {
-        await supabase.from('projects').insert({
-            image_url: secureUrl,
-            title: label,
-            created_at: new Date().toISOString()
+      console.log("Cloudinary Upload Success:", secureUrl);
+
+      // PERSISTENCE: Save only secure_url to Supabase
+      const sb = (window as any).supabase;
+      if (sb) {
+        console.log("Inserting record into Supabase projects table...");
+        const client = sb.createClient(supabaseUrl, supabaseKey);
+        const { error: sbError } = await client.from('projects').insert({
+          image_url: secureUrl,
+          title: label || 'Uploaded Asset',
+          created_at: new Date().toISOString()
         });
+
+        if (sbError) {
+          console.error("Supabase Insertion Error:", sbError);
+          throw new Error("Cloudinary worked but Supabase failed: " + sbError.message);
+        }
+        console.log("Supabase Insertion Success.");
       }
 
       onImageChange(secureUrl);

@@ -14,6 +14,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Supabase SDK CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -88,8 +91,7 @@
     "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "react-easy-crop": "https://esm.sh/react-easy-crop@^5.5.6",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+    "react-easy-crop": "https://esm.sh/react-easy-crop@^5.5.6"
   }
 }
 </script>
@@ -97,5 +99,13 @@
 <body class="bg-white text-gray-900 dark:bg-[#1E1E1E] dark:text-gray-100 transition-colors duration-300 antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <!-- Fallback check for Supabase SDK -->
+    <script>
+      if (window.supabase) {
+        console.log("SUPABASE JS LOADED VIA CDN");
+      } else {
+        console.error("SUPABASE JS FAILED TO LOAD FROM CDN");
+      }
+    </script>
 </body>
 </html>
