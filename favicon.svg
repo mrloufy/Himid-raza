@@ -1,9 +1,12 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Spines -->
-  <path d="M11 7.5V22M14.5 3V22H24" stroke="#FF6B4E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Book Base (Pages) -->
-  <path d="M11 26C15 26 23 27 27.5 26.5" stroke="#FF6B4E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M11 26C15 28.5 23 30.5 27.5 30" stroke="#FF6B4E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Binding Connections -->
-  <path d="M11 22V30M27.5 26.5V30" stroke="#FF6B4E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- The 'L' Spines -->
+  <path d="M12 6.5V21" stroke="#FF6B4E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M15.5 2.5V21H24" stroke="#FF6B4E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- The Book Pages (Bottom) -->
+  <path d="M12 25C15 25 22 26 26.5 25.5" stroke="#FF6B4E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 28.5C15 30.5 22 31.5 26.5 30.5" stroke="#FF6B4E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Vertical connectors at the base -->
+  <path d="M12 21V30.5M26.5 25.5V30.5" stroke="#FF6B4E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
