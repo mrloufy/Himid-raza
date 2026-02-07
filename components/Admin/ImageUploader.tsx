@@ -1,15 +1,18 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import Cropper from 'react-easy-crop';
 import { Upload, X, Scissors, AlertCircle, Loader2, Info, Trash2 } from 'lucide-react';
 import Button from '../UI/Button';
 
 interface ImageUploaderProps {
   currentImage?: string;
-  onImageChange: (base64: string) => void;
+  onImageChange: (url: string) => void;
   label?: string;
   aspect?: number;
 }
+
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dtr3yvjac/upload';
+const UPLOAD_PRESET = 'Hamid_Raza';
 
 const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
@@ -34,7 +37,6 @@ async function getCroppedImg(
   canvas.width = pixelCrop.width;
   canvas.height = pixelCrop.height;
   
-  // Ensure the canvas is transparent before drawing
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
   ctx.drawImage(
@@ -49,13 +51,10 @@ async function getCroppedImg(
     pixelCrop.height
   );
 
-  // Preserve transparency if the original was PNG or WebP
   const outputType = (mimeType === 'image/png' || mimeType === 'image/webp') ? mimeType : 'image/jpeg';
-  
-  // Quality only applies to JPEG/WebP. PNG is lossless.
-  const quality = outputType === 'image/jpeg' ? 0.6 : 0.8;
+  const quality = outputType === 'image/jpeg' ? 0.7 : 0.8;
 
-  const MAX_HEIGHT = 800; 
+  const MAX_HEIGHT = 1200; 
   if (canvas.height > MAX_HEIGHT) {
     const scale = MAX_HEIGHT / canvas.height;
     const newHeight = MAX_HEIGHT;
@@ -113,16 +112,33 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
   const showCroppedImage = async () => {
     if (imageSrc && croppedAreaPixels) {
       setIsProcessing(true);
+      setError(null);
       try {
-        const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, mimeType);
-        if (croppedImage) {
-          onImageChange(croppedImage);
+        const croppedBase64 = await getCroppedImg(imageSrc, croppedAreaPixels, mimeType);
+        if (croppedBase64) {
+          // Upload to Cloudinary
+          const formData = new FormData();
+          formData.append('file', croppedBase64);
+          formData.append('upload_preset', UPLOAD_PRESET);
+
+          const response = await fetch(CLOUDINARY_URL, {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || 'Cloudinary upload failed');
+          }
+
+          const data = await response.json();
+          onImageChange(data.secure_url);
           setIsCropping(false);
           setImageSrc(null);
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
-        setError("Failed to process image.");
+        setError(e.message || "Failed to process and upload image.");
       } finally {
         setIsProcessing(false);
       }
@@ -163,9 +179,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
           ) : (
             <div className="flex flex-col items-center gap-3 text-gray-400">
               <Upload size={32} className="opacity-50"/>
-              <div className="text-center">
-                <span className="text-[10px] font-black uppercase tracking-wider block">Upload Vertical Image</span>
-                <span className="text-[9px] font-bold text-gray-500">Supports transparency (PNG)</span>
+              <div className="text-center px-4">
+                <span className="text-[10px] font-black uppercase tracking-wider block">Upload & Attach to Cloudinary</span>
+                <span className="text-[9px] font-bold text-gray-500">Auto-stored on Cloudinary</span>
               </div>
             </div>
           )}
@@ -175,7 +191,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
         {error && <p className="text-[10px] text-red-500 font-bold flex items-center gap-1"><AlertCircle size={10}/> {error}</p>}
         
         {!currentImage && !error && (
-            <p className="text-[9px] text-gray-400 flex items-center gap-1 italic"><Info size={10}/> Transparent PNGs are supported for logos and graphics.</p>
+            <p className="text-[9px] text-gray-400 flex items-center gap-1 italic"><Info size={10}/> Media will be hosted securely on Cloudinary.</p>
         )}
       </div>
 
@@ -185,11 +201,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
               <div className="p-8 flex justify-between items-center border-b dark:border-gray-800">
                  <div>
                     <h3 className="font-bold flex items-center gap-2 dark:text-white text-xl">
-                      <Scissors size={20} className="text-primary-500"/> Adjust Image
+                      <Scissors size={20} className="text-primary-500"/> Finalize Asset
                     </h3>
-                    <p className="text-xs text-gray-500 mt-1">Transparency will be preserved for PNG files.</p>
+                    <p className="text-xs text-gray-500 mt-1">Images are uploaded directly to Cloudinary Media Library.</p>
                  </div>
-                 <button type="button" onClick={() => { setIsCropping(false); setImageSrc(null); }} className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X size={24}/></button>
+                 <button type="button" onClick={() => { setIsCropping(false); setImageSrc(null); }} className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" disabled={isProcessing}><X size={24}/></button>
               </div>
               <div className="relative h-[400px] md:h-[500px] w-full bg-[#0a0a0a]">
                  <Cropper 
@@ -217,14 +233,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ currentImage, onImageChan
                       value={zoom} 
                       onChange={e => setZoom(Number(e.target.value))} 
                       className="flex-1 accent-primary-500 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer" 
+                      disabled={isProcessing}
                     />
                  </div>
                  <div className="flex gap-4">
-                    <Button type="button" variant="outline" onClick={() => { setIsCropping(false); setImageSrc(null); }} className="flex-1 py-5 rounded-2xl font-bold">Cancel</Button>
+                    <Button type="button" variant="outline" onClick={() => { setIsCropping(false); setImageSrc(null); }} className="flex-1 py-5 rounded-2xl font-bold" disabled={isProcessing}>Cancel</Button>
                     <Button type="button" onClick={showCroppedImage} className="flex-[2] py-5 rounded-2xl font-bold shadow-glow" disabled={isProcessing}>
-                        {isProcessing ? <><Loader2 size={20} className="animate-spin mr-2"/> Processing...</> : 'Save Professional Crop'}
+                        {isProcessing ? <><Loader2 size={20} className="animate-spin mr-2"/> Uploading to Cloudinary...</> : 'Upload to Cloudinary'}
                     </Button>
                  </div>
+                 {error && <p className="text-xs text-red-500 text-center font-bold">{error}</p>}
               </div>
            </div>
         </div>
